@@ -196,7 +196,7 @@ body {
 
 .quick-add-options {
   display: none;
-  padding: 12px 20px 14px;
+  padding: 0 20px 14px;
   border-top: 1px solid var(--border);
   flex-direction: column;
   gap: 0;
@@ -204,23 +204,31 @@ body {
 
 .quick-add-options.open { display: flex; }
 
+/* wrapper so :last-child works correctly */
+.chip-rows {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
 .chip-row {
   display: grid;
-  grid-template-columns: 64px 1fr;
-  gap: 0;
-  align-items: center;
-  padding: 6px 0;
+  grid-template-columns: 68px 1fr;
+  column-gap: 8px;
+  align-items: flex-start;
+  padding: 9px 0;
   border-bottom: 1px solid var(--border);
 }
 
-.chip-row:last-of-type { border-bottom: none; }
+.chip-rows .chip-row:last-child { border-bottom: none; }
 
 .chip-label {
   font-size: 11px;
   color: var(--ink-soft);
   font-weight: 600;
-  letter-spacing: .05em;
+  letter-spacing: .04em;
   white-space: nowrap;
+  padding-top: 5px; /* align with first chip line */
 }
 
 .chip-row-chips {
@@ -1027,52 +1035,54 @@ body {
         <input type="text" id="quick-add-input" placeholder="タスクを追加...">
       </div>
       <div class="quick-add-options" id="quick-add-options">
-        <!-- Deadline -->
-        <div class="chip-row">
-          <span class="chip-label">期限</span>
-          <div class="chip-row-chips">
-            <button class="chip selected" data-group="deadline" data-value="today">今日</button>
-            <button class="chip" data-group="deadline" data-value="tomorrow">明日</button>
-            <button class="chip" data-group="deadline" data-value="next-week">来週</button>
-            <button class="chip" data-group="deadline" data-value="none">未定</button>
-            <button class="chip" data-group="deadline" data-value="custom">日付指定</button>
-            <input type="date" id="custom-date-input">
+        <div class="chip-rows">
+          <!-- Deadline -->
+          <div class="chip-row">
+            <span class="chip-label">期限</span>
+            <div class="chip-row-chips">
+              <button class="chip selected" data-group="deadline" data-value="today">今日</button>
+              <button class="chip" data-group="deadline" data-value="tomorrow">明日</button>
+              <button class="chip" data-group="deadline" data-value="next-week">来週</button>
+              <button class="chip" data-group="deadline" data-value="none">未定</button>
+              <button class="chip" data-group="deadline" data-value="custom">日付指定</button>
+              <input type="date" id="custom-date-input">
+            </div>
           </div>
-        </div>
-        <!-- Importance -->
-        <div class="chip-row">
-          <span class="chip-label">重要度</span>
-          <div class="chip-row-chips">
-            <button class="chip color-chip" data-group="importance" data-value="high" style="border-color:#b5544d;color:#b5544d">
-              <span class="chip-dot" style="background:#b5544d"></span>高
-            </button>
-            <button class="chip color-chip selected" data-group="importance" data-value="medium" style="border-color:#a88f5c;color:#a88f5c">
-              <span class="chip-dot" style="background:#a88f5c"></span>中
-            </button>
-            <button class="chip color-chip" data-group="importance" data-value="low" style="border-color:#9b9a95;color:#9b9a95">
-              <span class="chip-dot" style="background:#9b9a95"></span>低
-            </button>
-            <button class="chip" data-group="importance" data-value="none">なし</button>
+          <!-- Importance -->
+          <div class="chip-row">
+            <span class="chip-label">重要度</span>
+            <div class="chip-row-chips">
+              <button class="chip color-chip" data-group="importance" data-value="high" style="border-color:#b5544d;color:#b5544d">
+                <span class="chip-dot" style="background:#b5544d"></span>高
+              </button>
+              <button class="chip color-chip selected" data-group="importance" data-value="medium" style="border-color:#a88f5c;color:#a88f5c">
+                <span class="chip-dot" style="background:#a88f5c"></span>中
+              </button>
+              <button class="chip color-chip" data-group="importance" data-value="low" style="border-color:#9b9a95;color:#9b9a95">
+                <span class="chip-dot" style="background:#9b9a95"></span>低
+              </button>
+              <button class="chip" data-group="importance" data-value="none">なし</button>
+            </div>
           </div>
-        </div>
-        <!-- Category -->
-        <div class="chip-row" id="chip-row-category">
-          <span class="chip-label">カテゴリ</span>
-          <div class="chip-row-chips" id="chip-row-category-chips"></div>
-        </div>
-        <!-- Project -->
-        <div class="chip-row" id="chip-row-project">
-          <span class="chip-label">プロジェクト</span>
-          <div class="chip-row-chips" id="chip-row-project-chips"></div>
-        </div>
-        <!-- Estimated Hours -->
-        <div class="chip-row">
-          <span class="chip-label">予定時間</span>
-          <div class="chip-row-chips">
-            <div class="hours-stepper">
-              <button class="stepper-btn" id="hours-dec" type="button">−</button>
-              <span class="stepper-value" id="hours-display">1h</span>
-              <button class="stepper-btn" id="hours-inc" type="button">＋</button>
+          <!-- Category -->
+          <div class="chip-row" id="chip-row-category">
+            <span class="chip-label">カテゴリ</span>
+            <div class="chip-row-chips" id="chip-row-category-chips"></div>
+          </div>
+          <!-- Project -->
+          <div class="chip-row" id="chip-row-project">
+            <span class="chip-label">プロジェクト</span>
+            <div class="chip-row-chips" id="chip-row-project-chips"></div>
+          </div>
+          <!-- Estimated Hours -->
+          <div class="chip-row">
+            <span class="chip-label">予定時間</span>
+            <div class="chip-row-chips">
+              <div class="hours-stepper">
+                <button class="stepper-btn" id="hours-dec" type="button">−</button>
+                <span class="stepper-value" id="hours-display">1h</span>
+                <button class="stepper-btn" id="hours-inc" type="button">＋</button>
+              </div>
             </div>
           </div>
         </div>
