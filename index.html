@@ -802,42 +802,34 @@ body {
   border-top: 1px solid var(--border);
 }
 
-.color-palette {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
+/* ─── Color swatch buttons ─── */
 .color-swatch-btn {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
   transition: transform .12s, border-color .12s;
   flex-shrink: 0;
   outline: none;
+  padding: 0;
 }
 
-.color-swatch-btn:hover { transform: scale(1.15); }
+.color-swatch-btn:hover { transform: scale(1.18); }
 .color-swatch-btn.selected { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
 
-/* inline color palette popover in settings list */
-.color-edit-popover {
+/* inline color strip shown inside settings-item */
+.inline-color-strip {
   display: none;
-  position: absolute;
-  background: #fff;
-  border: 1px solid var(--gray-300);
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
-  z-index: 150;
-  padding: 10px;
   gap: 7px;
+  align-items: center;
+  padding: 8px 20px 10px 42px;
+  border-top: 1px solid var(--border);
   flex-wrap: wrap;
-  width: 188px;
+  background: var(--gray-50);
 }
 
-.color-edit-popover.open { display: flex; }
+.inline-color-strip.open { display: flex; }
 
 .add-form input[type="text"] {
   flex: 1;
@@ -1155,12 +1147,10 @@ body {
         <span>カテゴリ</span>
       </div>
       <div class="settings-list" id="cat-list"></div>
-      <div class="add-form" style="flex-direction:column;align-items:stretch;gap:10px">
-        <div class="color-palette" id="cat-color-palette"></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="cat-name-input" placeholder="カテゴリ名" maxlength="20">
-          <button class="btn btn-primary" id="cat-add-btn">追加</button>
-        </div>
+      <div class="add-form">
+        <div id="cat-color-palette" style="display:flex;gap:6px;flex-shrink:0"></div>
+        <input type="text" id="cat-name-input" placeholder="カテゴリ名" maxlength="20">
+        <button class="btn btn-primary" id="cat-add-btn">追加</button>
       </div>
     </div>
 
@@ -1170,12 +1160,10 @@ body {
         <span>プロジェクト</span>
       </div>
       <div class="settings-list" id="proj-list"></div>
-      <div class="add-form" style="flex-direction:column;align-items:stretch;gap:10px">
-        <div class="color-palette" id="proj-color-palette"></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="proj-name-input" placeholder="プロジェクト名" maxlength="20">
-          <button class="btn btn-primary" id="proj-add-btn">追加</button>
-        </div>
+      <div class="add-form">
+        <div id="proj-color-palette" style="display:flex;gap:6px;flex-shrink:0"></div>
+        <input type="text" id="proj-name-input" placeholder="プロジェクト名" maxlength="20">
+        <button class="btn btn-primary" id="proj-add-btn">追加</button>
       </div>
     </div>
 
@@ -1895,15 +1883,14 @@ function renderSettings() {
   document.getElementById('data-task-count').textContent = tasks.length + ' 件';
 }
 
-// ─── Preset palette ───
+// ─── Preset palette (8色) ───
 const PRESET_COLORS = [
-  '#b5544d','#a88f5c','#68886e','#4a7fa5','#6b6ea8',
-  '#9b6ea8','#b8699a','#b87355','#5c8a7a','#6e8ab8',
-  '#9b9a95','#37352f',
+  '#b5544d','#a88f5c','#68886e','#4a7fa5',
+  '#6b6ea8','#9b6ea8','#b8699a','#9b9a95',
 ];
 
 let catSelectedColor = PRESET_COLORS[3];
-let projSelectedColor = PRESET_COLORS[4];
+let projSelectedColor = PRESET_COLORS[0];
 
 function renderColorPalette(containerId, selectedColor, onChange) {
   const container = document.getElementById(containerId);
@@ -1912,54 +1899,57 @@ function renderColorPalette(containerId, selectedColor, onChange) {
     const btn = document.createElement('button');
     btn.className = 'color-swatch-btn' + (c === selectedColor ? ' selected' : '');
     btn.style.background = c;
-    btn.title = c;
-    btn.addEventListener('click', () => {
-      onChange(c);
-      renderColorPalette(containerId, c, onChange);
-    });
+    btn.addEventListener('click', () => { onChange(c); renderColorPalette(containerId, c, onChange); });
     container.appendChild(btn);
   });
+}
+
+function makeColorStrip(currentColor, onSelect) {
+  const strip = document.createElement('div');
+  strip.className = 'inline-color-strip';
+  PRESET_COLORS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'color-swatch-btn' + (c === currentColor ? ' selected' : '');
+    btn.style.background = c;
+    btn.addEventListener('click', e => { e.stopPropagation(); onSelect(c, strip); });
+    strip.appendChild(btn);
+  });
+  return strip;
 }
 
 function renderCatList() {
   const list = document.getElementById('cat-list');
   list.innerHTML = '';
   workTypes.forEach(wt => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'border-bottom:1px solid var(--border);';
+
     const item = document.createElement('div');
     item.className = 'settings-item';
-    item.style.position = 'relative';
+    item.style.borderBottom = 'none';
     item.innerHTML = `
-      <button class="color-swatch-btn" style="background:${wt.color};border-color:transparent;width:18px;height:18px" title="色を変更" data-action="color-btn"></button>
+      <button class="color-swatch-btn" style="background:${wt.color}" title="色を変更" data-action="color-btn"></button>
       <span class="settings-item-name">${escHtml(wt.label)}</span>
       <button class="settings-delete-btn" data-action="delete">削除</button>
     `;
 
-    // Color edit popover
-    const popover = document.createElement('div');
-    popover.className = 'color-edit-popover';
-    PRESET_COLORS.forEach(c => {
-      const pb = document.createElement('button');
-      pb.className = 'color-swatch-btn' + (c === wt.color ? ' selected' : '');
-      pb.style.background = c;
-      pb.addEventListener('click', e => {
-        e.stopPropagation();
-        wt.color = c;
-        saveWorkTypes();
-        popover.classList.remove('open');
-        renderCatList();
-        renderQaChips();
+    const strip = makeColorStrip(wt.color, (c, s) => {
+      wt.color = c;
+      saveWorkTypes();
+      s.classList.remove('open');
+      item.querySelector('[data-action="color-btn"]').style.background = c;
+      s.querySelectorAll('.color-swatch-btn').forEach(b => {
+        b.classList.toggle('selected', b.style.background === c || b.style.backgroundColor === c);
       });
-      popover.appendChild(pb);
+      renderQaChips();
     });
-    item.appendChild(popover);
+    wrapper.appendChild(item);
+    wrapper.appendChild(strip);
 
     item.querySelector('[data-action="color-btn"]').addEventListener('click', e => {
       e.stopPropagation();
-      document.querySelectorAll('.color-edit-popover.open').forEach(p => p !== popover && p.classList.remove('open'));
-      const rect = e.currentTarget.getBoundingClientRect();
-      popover.style.top = (e.currentTarget.offsetTop + e.currentTarget.offsetHeight + 4) + 'px';
-      popover.style.left = e.currentTarget.offsetLeft + 'px';
-      popover.classList.toggle('open');
+      document.querySelectorAll('.inline-color-strip.open').forEach(s => s !== strip && s.classList.remove('open'));
+      strip.classList.toggle('open');
     });
 
     item.querySelector('[data-action="delete"]').addEventListener('click', () => {
@@ -1973,7 +1963,7 @@ function renderCatList() {
       ]);
     });
 
-    list.appendChild(item);
+    list.appendChild(wrapper);
   });
 }
 
@@ -1981,40 +1971,35 @@ function renderProjList() {
   const list = document.getElementById('proj-list');
   list.innerHTML = '';
   projects.forEach(p => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'border-bottom:1px solid var(--border);';
+
     const item = document.createElement('div');
     item.className = 'settings-item';
-    item.style.position = 'relative';
+    item.style.borderBottom = 'none';
     item.innerHTML = `
-      <button class="color-swatch-btn" style="background:${p.color};border-color:transparent;width:18px;height:18px" title="色を変更" data-action="color-btn"></button>
+      <button class="color-swatch-btn" style="background:${p.color}" title="色を変更" data-action="color-btn"></button>
       <span class="settings-item-name">${escHtml(p.name)}</span>
       <button class="settings-delete-btn" data-action="delete">削除</button>
     `;
 
-    const popover = document.createElement('div');
-    popover.className = 'color-edit-popover';
-    PRESET_COLORS.forEach(c => {
-      const pb = document.createElement('button');
-      pb.className = 'color-swatch-btn' + (c === p.color ? ' selected' : '');
-      pb.style.background = c;
-      pb.addEventListener('click', e => {
-        e.stopPropagation();
-        p.color = c;
-        saveProjects();
-        popover.classList.remove('open');
-        renderProjList();
-        renderQaChips();
+    const strip = makeColorStrip(p.color, (c, s) => {
+      p.color = c;
+      saveProjects();
+      s.classList.remove('open');
+      item.querySelector('[data-action="color-btn"]').style.background = c;
+      s.querySelectorAll('.color-swatch-btn').forEach(b => {
+        b.classList.toggle('selected', b.style.background === c || b.style.backgroundColor === c);
       });
-      popover.appendChild(pb);
+      renderQaChips();
     });
-    item.appendChild(popover);
+    wrapper.appendChild(item);
+    wrapper.appendChild(strip);
 
     item.querySelector('[data-action="color-btn"]').addEventListener('click', e => {
       e.stopPropagation();
-      document.querySelectorAll('.color-edit-popover.open').forEach(el => el !== popover && el.classList.remove('open'));
-      const btn = e.currentTarget;
-      popover.style.top = (btn.offsetTop + btn.offsetHeight + 4) + 'px';
-      popover.style.left = btn.offsetLeft + 'px';
-      popover.classList.toggle('open');
+      document.querySelectorAll('.inline-color-strip.open').forEach(s => s !== strip && s.classList.remove('open'));
+      strip.classList.toggle('open');
     });
 
     item.querySelector('[data-action="delete"]').addEventListener('click', () => {
@@ -2028,13 +2013,13 @@ function renderProjList() {
       ]);
     });
 
-    list.appendChild(item);
+    list.appendChild(wrapper);
   });
 }
 
-// Close popovers on outside click
+// Close inline color strips on outside click
 document.addEventListener('click', () => {
-  document.querySelectorAll('.color-edit-popover.open').forEach(p => p.classList.remove('open'));
+  document.querySelectorAll('.inline-color-strip.open').forEach(s => s.classList.remove('open'));
 });
 
 document.getElementById('cat-add-btn').addEventListener('click', () => {
