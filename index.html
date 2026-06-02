@@ -196,34 +196,56 @@ body {
 
 .quick-add-options {
   display: none;
-  padding: 0 16px 14px;
+  padding: 0 20px 14px;
   border-top: 1px solid var(--border);
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
 }
 
 .quick-add-options.open { display: flex; }
 
-.chip-row {
+.chip-rows {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
+  flex-direction: column;
+  margin-bottom: 12px;
+  margin-top: 100px;
 }
+
+.chip-row {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  column-gap: 16px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.chip-rows .chip-row:last-child { border-bottom: none; }
 
 .chip-label {
   font-size: 11px;
   color: var(--ink-soft);
   font-weight: 600;
-  letter-spacing: .05em;
-  min-width: 52px;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  text-align: right;
+  padding-top: 5px;
+  flex-shrink: 0;
+}
+
+.chip-row-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  min-height: 28px;
 }
 
 .chip {
-  padding: 4px 10px;
+  padding: 4px 11px;
   border: 1px solid var(--gray-300);
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 12.5px;
   cursor: pointer;
   transition: all .12s;
   background: #fff;
@@ -232,6 +254,8 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .chip:hover { border-color: var(--ink-soft); color: var(--ink); }
@@ -249,7 +273,44 @@ body {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  padding-top: 4px;
+  padding-top: 12px;
+}
+
+/* Hours stepper */
+.hours-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--gray-300);
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  transition: all .12s;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.stepper-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+.stepper-btn:disabled { opacity: .3; cursor: default; }
+
+.stepper-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 36px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .btn {
@@ -741,15 +802,42 @@ body {
   border-top: 1px solid var(--border);
 }
 
-#cat-color-picker, #proj-color-picker {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: 1px solid var(--gray-300);
-  padding: 2px;
-  cursor: pointer;
-  background: #fff;
+.color-palette {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
+
+.color-swatch-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .12s, border-color .12s;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.color-swatch-btn:hover { transform: scale(1.15); }
+.color-swatch-btn.selected { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
+
+/* inline color palette popover in settings list */
+.color-edit-popover {
+  display: none;
+  position: absolute;
+  background: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  z-index: 150;
+  padding: 10px;
+  gap: 7px;
+  flex-wrap: wrap;
+  width: 188px;
+}
+
+.color-edit-popover.open { display: flex; }
 
 .add-form input[type="text"] {
   flex: 1;
@@ -952,46 +1040,56 @@ body {
         <input type="text" id="quick-add-input" placeholder="タスクを追加...">
       </div>
       <div class="quick-add-options" id="quick-add-options">
-        <!-- Deadline -->
-        <div class="chip-row">
-          <span class="chip-label">期限</span>
-          <button class="chip selected" data-group="deadline" data-value="today">今日</button>
-          <button class="chip" data-group="deadline" data-value="tomorrow">明日</button>
-          <button class="chip" data-group="deadline" data-value="next-week">来週</button>
-          <button class="chip" data-group="deadline" data-value="none">未定</button>
-          <button class="chip" data-group="deadline" data-value="custom">日付指定</button>
-          <input type="date" id="custom-date-input">
-        </div>
-        <!-- Importance -->
-        <div class="chip-row">
-          <span class="chip-label">重要度</span>
-          <button class="chip color-chip" data-group="importance" data-value="high" style="border-color:#b5544d;color:#b5544d">
-            <span class="chip-dot" style="background:#b5544d"></span>高
-          </button>
-          <button class="chip color-chip selected" data-group="importance" data-value="medium" style="border-color:#a88f5c;color:#a88f5c">
-            <span class="chip-dot" style="background:#a88f5c"></span>中
-          </button>
-          <button class="chip color-chip" data-group="importance" data-value="low" style="border-color:#9b9a95;color:#9b9a95">
-            <span class="chip-dot" style="background:#9b9a95"></span>低
-          </button>
-          <button class="chip" data-group="importance" data-value="none">なし</button>
-        </div>
-        <!-- Category -->
-        <div class="chip-row" id="chip-row-category">
-          <span class="chip-label">カテゴリ</span>
-        </div>
-        <!-- Project -->
-        <div class="chip-row" id="chip-row-project">
-          <span class="chip-label">プロジェクト</span>
-        </div>
-        <!-- Estimated Hours -->
-        <div class="chip-row">
-          <span class="chip-label">予定時間</span>
-          <button class="chip" data-group="hours" data-value="0.5">0.5h</button>
-          <button class="chip selected" data-group="hours" data-value="1">1h</button>
-          <button class="chip" data-group="hours" data-value="2">2h</button>
-          <button class="chip" data-group="hours" data-value="3">3h</button>
-          <button class="chip" data-group="hours" data-value="4">4h</button>
+        <div class="chip-rows">
+          <!-- Deadline -->
+          <div class="chip-row">
+            <span class="chip-label">期限</span>
+            <div class="chip-row-chips">
+              <button class="chip selected" data-group="deadline" data-value="today">今日</button>
+              <button class="chip" data-group="deadline" data-value="tomorrow">明日</button>
+              <button class="chip" data-group="deadline" data-value="next-week">来週</button>
+              <button class="chip" data-group="deadline" data-value="none">未定</button>
+              <button class="chip" data-group="deadline" data-value="custom">日付指定</button>
+              <input type="date" id="custom-date-input">
+            </div>
+          </div>
+          <!-- Importance -->
+          <div class="chip-row">
+            <span class="chip-label">重要度</span>
+            <div class="chip-row-chips">
+              <button class="chip color-chip" data-group="importance" data-value="high" style="border-color:#b5544d;color:#b5544d">
+                <span class="chip-dot" style="background:#b5544d"></span>高
+              </button>
+              <button class="chip color-chip selected" data-group="importance" data-value="medium" style="border-color:#a88f5c;color:#a88f5c">
+                <span class="chip-dot" style="background:#a88f5c"></span>中
+              </button>
+              <button class="chip color-chip" data-group="importance" data-value="low" style="border-color:#9b9a95;color:#9b9a95">
+                <span class="chip-dot" style="background:#9b9a95"></span>低
+              </button>
+              <button class="chip" data-group="importance" data-value="none">なし</button>
+            </div>
+          </div>
+          <!-- Category -->
+          <div class="chip-row" id="chip-row-category">
+            <span class="chip-label">カテゴリ</span>
+            <div class="chip-row-chips" id="chip-row-category-chips"></div>
+          </div>
+          <!-- Project -->
+          <div class="chip-row" id="chip-row-project">
+            <span class="chip-label">プロジェクト</span>
+            <div class="chip-row-chips" id="chip-row-project-chips"></div>
+          </div>
+          <!-- Estimated Hours -->
+          <div class="chip-row">
+            <span class="chip-label">予定時間</span>
+            <div class="chip-row-chips">
+              <div class="hours-stepper">
+                <button class="stepper-btn" id="hours-dec" type="button">−</button>
+                <span class="stepper-value" id="hours-display">1h</span>
+                <button class="stepper-btn" id="hours-inc" type="button">＋</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="quick-add-actions">
           <button class="btn btn-ghost" id="quick-cancel-btn">キャンセル</button>
@@ -1057,10 +1155,12 @@ body {
         <span>カテゴリ</span>
       </div>
       <div class="settings-list" id="cat-list"></div>
-      <div class="add-form">
-        <input type="color" id="cat-color-picker" value="#3b82f6">
-        <input type="text" id="cat-name-input" placeholder="カテゴリ名" maxlength="20">
-        <button class="btn btn-primary" id="cat-add-btn">追加</button>
+      <div class="add-form" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div class="color-palette" id="cat-color-palette"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="cat-name-input" placeholder="カテゴリ名" maxlength="20">
+          <button class="btn btn-primary" id="cat-add-btn">追加</button>
+        </div>
       </div>
     </div>
 
@@ -1070,10 +1170,12 @@ body {
         <span>プロジェクト</span>
       </div>
       <div class="settings-list" id="proj-list"></div>
-      <div class="add-form">
-        <input type="color" id="proj-color-picker" value="#8b5cf6">
-        <input type="text" id="proj-name-input" placeholder="プロジェクト名" maxlength="20">
-        <button class="btn btn-primary" id="proj-add-btn">追加</button>
+      <div class="add-form" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div class="color-palette" id="proj-color-palette"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="proj-name-input" placeholder="プロジェクト名" maxlength="20">
+          <button class="btn btn-primary" id="proj-add-btn">追加</button>
+        </div>
       </div>
     </div>
 
@@ -1270,13 +1372,13 @@ function closeQa() {
   qaInput.blur();
   qa = { deadline: 'today', customDate: '', importance: 'medium', categoryId: null, projectId: null, hours: 1 };
   document.getElementById('custom-date-input').classList.remove('show');
+  updateHoursDisplay();
 }
 
 function renderQaChips() {
   // Category chips
-  const catRow = document.getElementById('chip-row-category');
-  const existingCats = catRow.querySelectorAll('[data-group="category"]');
-  existingCats.forEach(el => el.remove());
+  const catChips = document.getElementById('chip-row-category-chips');
+  catChips.innerHTML = '';
   workTypes.forEach(wt => {
     const btn = document.createElement('button');
     btn.className = 'chip color-chip' + (qa.categoryId === wt.id ? ' selected' : '');
@@ -1286,13 +1388,15 @@ function renderQaChips() {
     btn.style.color = wt.color;
     btn.innerHTML = `<span class="chip-dot" style="background:${wt.color}"></span>${wt.label}`;
     if (qa.categoryId === wt.id) { btn.style.background = wt.color; btn.style.color = '#fff'; }
-    catRow.appendChild(btn);
+    catChips.appendChild(btn);
   });
+  if (workTypes.length === 0) {
+    catChips.innerHTML = '<span style="font-size:11.5px;color:var(--gray-400)">設定から追加できます</span>';
+  }
 
   // Project chips
-  const projRow = document.getElementById('chip-row-project');
-  const existingProjs = projRow.querySelectorAll('[data-group="project"]');
-  existingProjs.forEach(el => el.remove());
+  const projChips = document.getElementById('chip-row-project-chips');
+  projChips.innerHTML = '';
   projects.forEach(p => {
     const btn = document.createElement('button');
     btn.className = 'chip color-chip' + (qa.projectId === p.id ? ' selected' : '');
@@ -1302,8 +1406,11 @@ function renderQaChips() {
     btn.style.color = p.color;
     btn.innerHTML = `<span class="chip-dot" style="background:${p.color}"></span>${p.name}`;
     if (qa.projectId === p.id) { btn.style.background = p.color; btn.style.color = '#fff'; }
-    projRow.appendChild(btn);
+    projChips.appendChild(btn);
   });
+  if (projects.length === 0) {
+    projChips.innerHTML = '<span style="font-size:11.5px;color:var(--gray-400)">設定から追加できます</span>';
+  }
 }
 
 // Chip click handler (delegated)
@@ -1338,11 +1445,35 @@ document.getElementById('quick-add-options').addEventListener('click', e => {
   } else if (group === 'project') {
     qa.projectId = qa.projectId === val ? null : val;
     renderQaChips();
-  } else if (group === 'hours') {
-    qa.hours = parseFloat(val);
-    document.querySelectorAll('[data-group="hours"]').forEach(c => c.classList.remove('selected'));
-    chip.classList.add('selected');
   }
+});
+
+// Hours stepper
+const HOURS_STEP = 0.5; // 30min
+const HOURS_MIN = 0.5;
+const HOURS_MAX = 24;
+
+function formatHours(h) {
+  if (h < 1) return Math.round(h * 60) + '分';
+  const whole = Math.floor(h);
+  const rem = Math.round((h - whole) * 60);
+  return rem > 0 ? `${whole}h${rem}分` : `${whole}h`;
+}
+
+function updateHoursDisplay() {
+  document.getElementById('hours-display').textContent = formatHours(qa.hours);
+  document.getElementById('hours-dec').disabled = qa.hours <= HOURS_MIN;
+  document.getElementById('hours-inc').disabled = qa.hours >= HOURS_MAX;
+}
+
+document.getElementById('hours-dec').addEventListener('click', () => {
+  qa.hours = Math.max(HOURS_MIN, Math.round((qa.hours - HOURS_STEP) * 100) / 100);
+  updateHoursDisplay();
+});
+
+document.getElementById('hours-inc').addEventListener('click', () => {
+  qa.hours = Math.min(HOURS_MAX, Math.round((qa.hours + HOURS_STEP) * 100) / 100);
+  updateHoursDisplay();
 });
 
 document.getElementById('custom-date-input').addEventListener('change', e => {
@@ -1517,7 +1648,7 @@ function createTaskRow(task) {
     ? `<span class="task-badge badge-pinned">${task.pinnedHour}:00</span>` : '';
   const catBadge = wt
     ? `<span class="task-badge badge-category" style="background:${wt.color}18;color:${wt.color}">${wt.label}</span>` : '';
-  const hoursStr = task.estimatedHours ? task.estimatedHours + 'h' : '—';
+  const hoursStr = task.estimatedHours ? formatHours(task.estimatedHours) : '—';
 
   row.innerHTML = `
     <span class="drag-handle" title="ドラッグして並び替え">⠿</span>
@@ -1589,12 +1720,15 @@ let hoursPopoverTarget = null;
 function showHoursPopover(taskId, anchor) {
   hoursPopoverTarget = taskId;
   const t = tasks.find(t => t.id === taskId);
-  const options = [0.5, 1, 1.5, 2, 3, 4, 6, 8];
+  // 30min steps
+  const options = [];
+  for (let h = 0.5; h <= 8; h += 0.5) options.push(h);
+
   hoursPopover.innerHTML = '';
   options.forEach(h => {
     const btn = document.createElement('button');
     btn.className = 'hours-option' + (t && t.estimatedHours === h ? ' active' : '');
-    btn.textContent = h + 'h';
+    btn.textContent = formatHours(h);
     btn.addEventListener('click', () => {
       const task = tasks.find(t => t.id === taskId);
       if (task) { task.estimatedHours = h; saveTasks(); renderTaskList(); renderHero(); }
@@ -1759,7 +1893,35 @@ function renderCalendar() {
 function renderSettings() {
   renderCatList();
   renderProjList();
+  renderColorPalette('cat-color-palette', catSelectedColor, c => { catSelectedColor = c; });
+  renderColorPalette('proj-color-palette', projSelectedColor, c => { projSelectedColor = c; });
   document.getElementById('data-task-count').textContent = tasks.length + ' 件';
+}
+
+// ─── Preset palette ───
+const PRESET_COLORS = [
+  '#b5544d','#a88f5c','#68886e','#4a7fa5','#6b6ea8',
+  '#9b6ea8','#b8699a','#b87355','#5c8a7a','#6e8ab8',
+  '#9b9a95','#37352f',
+];
+
+let catSelectedColor = PRESET_COLORS[3];
+let projSelectedColor = PRESET_COLORS[4];
+
+function renderColorPalette(containerId, selectedColor, onChange) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  PRESET_COLORS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'color-swatch-btn' + (c === selectedColor ? ' selected' : '');
+    btn.style.background = c;
+    btn.title = c;
+    btn.addEventListener('click', () => {
+      onChange(c);
+      renderColorPalette(containerId, c, onChange);
+    });
+    container.appendChild(btn);
+  });
 }
 
 function renderCatList() {
@@ -1768,12 +1930,42 @@ function renderCatList() {
   workTypes.forEach(wt => {
     const item = document.createElement('div');
     item.className = 'settings-item';
+    item.style.position = 'relative';
     item.innerHTML = `
-      <div class="color-swatch" style="background:${wt.color}"></div>
+      <button class="color-swatch-btn" style="background:${wt.color};border-color:transparent;width:18px;height:18px" title="色を変更" data-action="color-btn"></button>
       <span class="settings-item-name">${escHtml(wt.label)}</span>
-      <button class="settings-delete-btn" data-id="${wt.id}">削除</button>
+      <button class="settings-delete-btn" data-action="delete">削除</button>
     `;
-    item.querySelector('.settings-delete-btn').addEventListener('click', () => {
+
+    // Color edit popover
+    const popover = document.createElement('div');
+    popover.className = 'color-edit-popover';
+    PRESET_COLORS.forEach(c => {
+      const pb = document.createElement('button');
+      pb.className = 'color-swatch-btn' + (c === wt.color ? ' selected' : '');
+      pb.style.background = c;
+      pb.addEventListener('click', e => {
+        e.stopPropagation();
+        wt.color = c;
+        saveWorkTypes();
+        popover.classList.remove('open');
+        renderCatList();
+        renderQaChips();
+      });
+      popover.appendChild(pb);
+    });
+    item.appendChild(popover);
+
+    item.querySelector('[data-action="color-btn"]').addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.color-edit-popover.open').forEach(p => p !== popover && p.classList.remove('open'));
+      const rect = e.currentTarget.getBoundingClientRect();
+      popover.style.top = (e.currentTarget.offsetTop + e.currentTarget.offsetHeight + 4) + 'px';
+      popover.style.left = e.currentTarget.offsetLeft + 'px';
+      popover.classList.toggle('open');
+    });
+
+    item.querySelector('[data-action="delete"]').addEventListener('click', () => {
       showModal('カテゴリを削除', `「${wt.label}」を削除しますか？`, [
         { label: 'キャンセル', cls: 'btn-ghost', action: hideModal },
         { label: '削除', cls: 'btn-danger', action: () => {
@@ -1783,6 +1975,7 @@ function renderCatList() {
         }},
       ]);
     });
+
     list.appendChild(item);
   });
 }
@@ -1793,12 +1986,41 @@ function renderProjList() {
   projects.forEach(p => {
     const item = document.createElement('div');
     item.className = 'settings-item';
+    item.style.position = 'relative';
     item.innerHTML = `
-      <div class="color-swatch" style="background:${p.color}"></div>
+      <button class="color-swatch-btn" style="background:${p.color};border-color:transparent;width:18px;height:18px" title="色を変更" data-action="color-btn"></button>
       <span class="settings-item-name">${escHtml(p.name)}</span>
-      <button class="settings-delete-btn" data-id="${p.id}">削除</button>
+      <button class="settings-delete-btn" data-action="delete">削除</button>
     `;
-    item.querySelector('.settings-delete-btn').addEventListener('click', () => {
+
+    const popover = document.createElement('div');
+    popover.className = 'color-edit-popover';
+    PRESET_COLORS.forEach(c => {
+      const pb = document.createElement('button');
+      pb.className = 'color-swatch-btn' + (c === p.color ? ' selected' : '');
+      pb.style.background = c;
+      pb.addEventListener('click', e => {
+        e.stopPropagation();
+        p.color = c;
+        saveProjects();
+        popover.classList.remove('open');
+        renderProjList();
+        renderQaChips();
+      });
+      popover.appendChild(pb);
+    });
+    item.appendChild(popover);
+
+    item.querySelector('[data-action="color-btn"]').addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.color-edit-popover.open').forEach(el => el !== popover && el.classList.remove('open'));
+      const btn = e.currentTarget;
+      popover.style.top = (btn.offsetTop + btn.offsetHeight + 4) + 'px';
+      popover.style.left = btn.offsetLeft + 'px';
+      popover.classList.toggle('open');
+    });
+
+    item.querySelector('[data-action="delete"]').addEventListener('click', () => {
       showModal('プロジェクトを削除', `「${p.name}」を削除しますか？`, [
         { label: 'キャンセル', cls: 'btn-ghost', action: hideModal },
         { label: '削除', cls: 'btn-danger', action: () => {
@@ -1808,15 +2030,20 @@ function renderProjList() {
         }},
       ]);
     });
+
     list.appendChild(item);
   });
 }
 
+// Close popovers on outside click
+document.addEventListener('click', () => {
+  document.querySelectorAll('.color-edit-popover.open').forEach(p => p.classList.remove('open'));
+});
+
 document.getElementById('cat-add-btn').addEventListener('click', () => {
   const name = document.getElementById('cat-name-input').value.trim();
-  const color = document.getElementById('cat-color-picker').value;
   if (!name) return;
-  workTypes.push({ id: uid(), label: name, color });
+  workTypes.push({ id: uid(), label: name, color: catSelectedColor });
   saveWorkTypes();
   document.getElementById('cat-name-input').value = '';
   renderSettings();
@@ -1828,9 +2055,8 @@ document.getElementById('cat-name-input').addEventListener('keydown', e => {
 
 document.getElementById('proj-add-btn').addEventListener('click', () => {
   const name = document.getElementById('proj-name-input').value.trim();
-  const color = document.getElementById('proj-color-picker').value;
   if (!name) return;
-  projects.push({ id: uid(), name, color });
+  projects.push({ id: uid(), name, color: projSelectedColor });
   saveProjects();
   document.getElementById('proj-name-input').value = '';
   renderSettings();
@@ -1960,6 +2186,7 @@ document.getElementById('dismiss-install').addEventListener('click', () => {
 // ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
+updateHoursDisplay();
 renderAll();
 </script>
 </body>
