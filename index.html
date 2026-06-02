@@ -204,7 +204,6 @@ body {
 
 .quick-add-options.open { display: flex; }
 
-/* wrapper so :last-child works correctly */
 .chip-rows {
   display: flex;
   flex-direction: column;
@@ -213,10 +212,10 @@ body {
 
 .chip-row {
   display: grid;
-  grid-template-columns: 68px 1fr;
-  column-gap: 8px;
+  grid-template-columns: 60px 1fr;
+  column-gap: 16px;
   align-items: flex-start;
-  padding: 9px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -228,7 +227,9 @@ body {
   font-weight: 600;
   letter-spacing: .04em;
   white-space: nowrap;
-  padding-top: 5px; /* align with first chip line */
+  text-align: right;
+  padding-top: 5px;
+  flex-shrink: 0;
 }
 
 .chip-row-chips {
@@ -236,13 +237,14 @@ body {
   flex-wrap: wrap;
   gap: 5px;
   align-items: center;
+  min-height: 28px;
 }
 
 .chip {
-  padding: 4px 10px;
+  padding: 4px 11px;
   border: 1px solid var(--gray-300);
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 12.5px;
   cursor: pointer;
   transition: all .12s;
   background: #fff;
@@ -251,6 +253,8 @@ body {
   display: flex;
   align-items: center;
   gap: 5px;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .chip:hover { border-color: var(--ink-soft); color: var(--ink); }
