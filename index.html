@@ -196,27 +196,38 @@ body {
 
 .quick-add-options {
   display: none;
-  padding: 0 16px 14px;
+  padding: 12px 20px 14px;
   border-top: 1px solid var(--border);
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
 }
 
 .quick-add-options.open { display: flex; }
 
 .chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 0;
   align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
 }
+
+.chip-row:last-of-type { border-bottom: none; }
 
 .chip-label {
   font-size: 11px;
   color: var(--ink-soft);
   font-weight: 600;
   letter-spacing: .05em;
-  min-width: 52px;
+  white-space: nowrap;
+}
+
+.chip-row-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
 }
 
 .chip {
@@ -249,7 +260,44 @@ body {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
-  padding-top: 4px;
+  padding-top: 12px;
+}
+
+/* Hours stepper */
+.hours-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stepper-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--gray-300);
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-soft);
+  transition: all .12s;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.stepper-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+.stepper-btn:disabled { opacity: .3; cursor: default; }
+
+.stepper-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 36px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .btn {
@@ -982,43 +1030,51 @@ body {
         <!-- Deadline -->
         <div class="chip-row">
           <span class="chip-label">期限</span>
-          <button class="chip selected" data-group="deadline" data-value="today">今日</button>
-          <button class="chip" data-group="deadline" data-value="tomorrow">明日</button>
-          <button class="chip" data-group="deadline" data-value="next-week">来週</button>
-          <button class="chip" data-group="deadline" data-value="none">未定</button>
-          <button class="chip" data-group="deadline" data-value="custom">日付指定</button>
-          <input type="date" id="custom-date-input">
+          <div class="chip-row-chips">
+            <button class="chip selected" data-group="deadline" data-value="today">今日</button>
+            <button class="chip" data-group="deadline" data-value="tomorrow">明日</button>
+            <button class="chip" data-group="deadline" data-value="next-week">来週</button>
+            <button class="chip" data-group="deadline" data-value="none">未定</button>
+            <button class="chip" data-group="deadline" data-value="custom">日付指定</button>
+            <input type="date" id="custom-date-input">
+          </div>
         </div>
         <!-- Importance -->
         <div class="chip-row">
           <span class="chip-label">重要度</span>
-          <button class="chip color-chip" data-group="importance" data-value="high" style="border-color:#b5544d;color:#b5544d">
-            <span class="chip-dot" style="background:#b5544d"></span>高
-          </button>
-          <button class="chip color-chip selected" data-group="importance" data-value="medium" style="border-color:#a88f5c;color:#a88f5c">
-            <span class="chip-dot" style="background:#a88f5c"></span>中
-          </button>
-          <button class="chip color-chip" data-group="importance" data-value="low" style="border-color:#9b9a95;color:#9b9a95">
-            <span class="chip-dot" style="background:#9b9a95"></span>低
-          </button>
-          <button class="chip" data-group="importance" data-value="none">なし</button>
+          <div class="chip-row-chips">
+            <button class="chip color-chip" data-group="importance" data-value="high" style="border-color:#b5544d;color:#b5544d">
+              <span class="chip-dot" style="background:#b5544d"></span>高
+            </button>
+            <button class="chip color-chip selected" data-group="importance" data-value="medium" style="border-color:#a88f5c;color:#a88f5c">
+              <span class="chip-dot" style="background:#a88f5c"></span>中
+            </button>
+            <button class="chip color-chip" data-group="importance" data-value="low" style="border-color:#9b9a95;color:#9b9a95">
+              <span class="chip-dot" style="background:#9b9a95"></span>低
+            </button>
+            <button class="chip" data-group="importance" data-value="none">なし</button>
+          </div>
         </div>
         <!-- Category -->
         <div class="chip-row" id="chip-row-category">
           <span class="chip-label">カテゴリ</span>
+          <div class="chip-row-chips" id="chip-row-category-chips"></div>
         </div>
         <!-- Project -->
         <div class="chip-row" id="chip-row-project">
           <span class="chip-label">プロジェクト</span>
+          <div class="chip-row-chips" id="chip-row-project-chips"></div>
         </div>
         <!-- Estimated Hours -->
         <div class="chip-row">
           <span class="chip-label">予定時間</span>
-          <button class="chip" data-group="hours" data-value="0.5">0.5h</button>
-          <button class="chip selected" data-group="hours" data-value="1">1h</button>
-          <button class="chip" data-group="hours" data-value="2">2h</button>
-          <button class="chip" data-group="hours" data-value="3">3h</button>
-          <button class="chip" data-group="hours" data-value="4">4h</button>
+          <div class="chip-row-chips">
+            <div class="hours-stepper">
+              <button class="stepper-btn" id="hours-dec" type="button">−</button>
+              <span class="stepper-value" id="hours-display">1h</span>
+              <button class="stepper-btn" id="hours-inc" type="button">＋</button>
+            </div>
+          </div>
         </div>
         <div class="quick-add-actions">
           <button class="btn btn-ghost" id="quick-cancel-btn">キャンセル</button>
@@ -1301,13 +1357,13 @@ function closeQa() {
   qaInput.blur();
   qa = { deadline: 'today', customDate: '', importance: 'medium', categoryId: null, projectId: null, hours: 1 };
   document.getElementById('custom-date-input').classList.remove('show');
+  updateHoursDisplay();
 }
 
 function renderQaChips() {
   // Category chips
-  const catRow = document.getElementById('chip-row-category');
-  const existingCats = catRow.querySelectorAll('[data-group="category"]');
-  existingCats.forEach(el => el.remove());
+  const catChips = document.getElementById('chip-row-category-chips');
+  catChips.innerHTML = '';
   workTypes.forEach(wt => {
     const btn = document.createElement('button');
     btn.className = 'chip color-chip' + (qa.categoryId === wt.id ? ' selected' : '');
@@ -1317,13 +1373,15 @@ function renderQaChips() {
     btn.style.color = wt.color;
     btn.innerHTML = `<span class="chip-dot" style="background:${wt.color}"></span>${wt.label}`;
     if (qa.categoryId === wt.id) { btn.style.background = wt.color; btn.style.color = '#fff'; }
-    catRow.appendChild(btn);
+    catChips.appendChild(btn);
   });
+  if (workTypes.length === 0) {
+    catChips.innerHTML = '<span style="font-size:11.5px;color:var(--gray-400)">設定から追加できます</span>';
+  }
 
   // Project chips
-  const projRow = document.getElementById('chip-row-project');
-  const existingProjs = projRow.querySelectorAll('[data-group="project"]');
-  existingProjs.forEach(el => el.remove());
+  const projChips = document.getElementById('chip-row-project-chips');
+  projChips.innerHTML = '';
   projects.forEach(p => {
     const btn = document.createElement('button');
     btn.className = 'chip color-chip' + (qa.projectId === p.id ? ' selected' : '');
@@ -1333,8 +1391,11 @@ function renderQaChips() {
     btn.style.color = p.color;
     btn.innerHTML = `<span class="chip-dot" style="background:${p.color}"></span>${p.name}`;
     if (qa.projectId === p.id) { btn.style.background = p.color; btn.style.color = '#fff'; }
-    projRow.appendChild(btn);
+    projChips.appendChild(btn);
   });
+  if (projects.length === 0) {
+    projChips.innerHTML = '<span style="font-size:11.5px;color:var(--gray-400)">設定から追加できます</span>';
+  }
 }
 
 // Chip click handler (delegated)
@@ -1369,11 +1430,35 @@ document.getElementById('quick-add-options').addEventListener('click', e => {
   } else if (group === 'project') {
     qa.projectId = qa.projectId === val ? null : val;
     renderQaChips();
-  } else if (group === 'hours') {
-    qa.hours = parseFloat(val);
-    document.querySelectorAll('[data-group="hours"]').forEach(c => c.classList.remove('selected'));
-    chip.classList.add('selected');
   }
+});
+
+// Hours stepper
+const HOURS_STEP = 0.25; // 15min
+const HOURS_MIN = 0.25;
+const HOURS_MAX = 24;
+
+function formatHours(h) {
+  if (h < 1) return Math.round(h * 60) + '分';
+  const whole = Math.floor(h);
+  const rem = Math.round((h - whole) * 60);
+  return rem > 0 ? `${whole}h${rem}分` : `${whole}h`;
+}
+
+function updateHoursDisplay() {
+  document.getElementById('hours-display').textContent = formatHours(qa.hours);
+  document.getElementById('hours-dec').disabled = qa.hours <= HOURS_MIN;
+  document.getElementById('hours-inc').disabled = qa.hours >= HOURS_MAX;
+}
+
+document.getElementById('hours-dec').addEventListener('click', () => {
+  qa.hours = Math.max(HOURS_MIN, Math.round((qa.hours - HOURS_STEP) * 100) / 100);
+  updateHoursDisplay();
+});
+
+document.getElementById('hours-inc').addEventListener('click', () => {
+  qa.hours = Math.min(HOURS_MAX, Math.round((qa.hours + HOURS_STEP) * 100) / 100);
+  updateHoursDisplay();
 });
 
 document.getElementById('custom-date-input').addEventListener('change', e => {
@@ -1548,7 +1633,7 @@ function createTaskRow(task) {
     ? `<span class="task-badge badge-pinned">${task.pinnedHour}:00</span>` : '';
   const catBadge = wt
     ? `<span class="task-badge badge-category" style="background:${wt.color}18;color:${wt.color}">${wt.label}</span>` : '';
-  const hoursStr = task.estimatedHours ? task.estimatedHours + 'h' : '—';
+  const hoursStr = task.estimatedHours ? formatHours(task.estimatedHours) : '—';
 
   row.innerHTML = `
     <span class="drag-handle" title="ドラッグして並び替え">⠿</span>
@@ -1620,12 +1705,16 @@ let hoursPopoverTarget = null;
 function showHoursPopover(taskId, anchor) {
   hoursPopoverTarget = taskId;
   const t = tasks.find(t => t.id === taskId);
-  const options = [0.5, 1, 1.5, 2, 3, 4, 6, 8];
+  // 15min steps: 0.25..1h, then 0.5h steps up to 8h
+  const options = [];
+  for (let m = 15; m <= 60; m += 15) options.push(m / 60);
+  for (let h = 1.5; h <= 8; h += 0.5) options.push(h);
+
   hoursPopover.innerHTML = '';
   options.forEach(h => {
     const btn = document.createElement('button');
     btn.className = 'hours-option' + (t && t.estimatedHours === h ? ' active' : '');
-    btn.textContent = h + 'h';
+    btn.textContent = formatHours(h);
     btn.addEventListener('click', () => {
       const task = tasks.find(t => t.id === taskId);
       if (task) { task.estimatedHours = h; saveTasks(); renderTaskList(); renderHero(); }
@@ -2083,6 +2172,7 @@ document.getElementById('dismiss-install').addEventListener('click', () => {
 // ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
+updateHoursDisplay();
 renderAll();
 </script>
 </body>
