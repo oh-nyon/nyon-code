@@ -1449,8 +1449,8 @@ document.getElementById('quick-add-options').addEventListener('click', e => {
 });
 
 // Hours stepper
-const HOURS_STEP = 0.25; // 15min
-const HOURS_MIN = 0.25;
+const HOURS_STEP = 0.5; // 30min
+const HOURS_MIN = 0.5;
 const HOURS_MAX = 24;
 
 function formatHours(h) {
@@ -1720,10 +1720,9 @@ let hoursPopoverTarget = null;
 function showHoursPopover(taskId, anchor) {
   hoursPopoverTarget = taskId;
   const t = tasks.find(t => t.id === taskId);
-  // 15min steps: 0.25..1h, then 0.5h steps up to 8h
+  // 30min steps
   const options = [];
-  for (let m = 15; m <= 60; m += 15) options.push(m / 60);
-  for (let h = 1.5; h <= 8; h += 0.5) options.push(h);
+  for (let h = 0.5; h <= 8; h += 0.5) options.push(h);
 
   hoursPopover.innerHTML = '';
   options.forEach(h => {
