@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#fafaf9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="TASKDOCK">
+<title>TASKDOCK</title>
+<style>
+:root {
+  --bg: #fafaf9;
+  --ink: #37352f;
+  --ink-soft: #787672;
+  --gray-50: #fbfbfa;
+  --gray-100: #f3f2ef;
+  --gray-200: #ebeae6;
+  --gray-300: #dcdad5;
+  --gray-400: #b8b6b0;
+  --gray-500: #9b9a95;
+  --border: rgba(55,53,47,.09);
+  --shadow-sm: 0 1px 2px rgba(15,15,15,.03);
+  --shadow-md: 0 4px 12px rgba(15,15,15,.08);
+  --green-500: #68886e;
+  --red-500: #b5544d;
+  --amber-500: #a88f5c;
+  --blue-500: #4a7fa5;
+  --radius: 8px;
+  --radius-sm: 5px;
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Header ─── */
+#header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 52px;
+  background: rgba(250,250,249,.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 32px;
+}
+
+.logo {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.tab-btn {
+  padding: 6px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-family: inherit;
+  color: var(--ink-soft);
+  border-radius: var(--radius-sm);
+  transition: all .15s;
+  font-weight: 500;
+}
+
+.tab-btn:hover { background: var(--gray-100); color: var(--ink); }
+.tab-btn.active { background: var(--gray-200); color: var(--ink); font-weight: 600; }
+
+/* ─── Main ─── */
+#main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── Hero Card ─── */
+.hero-card {
+  margin: 24px 0 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hero-date {
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+  font-weight: 500;
+  letter-spacing: .02em;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 32px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.hero-stat-item { display: flex; flex-direction: column; }
+
+.hero-stat-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.hero-stat-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+.hero-progress-bar {
+  width: 100%;
+  height: 5px;
+  background: var(--gray-200);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.hero-progress-fill {
+  height: 100%;
+  background: var(--green-500);
+  border-radius: 3px;
+  transition: width .4s ease;
+}
+
+/* ─── Quick Add Panel ─── */
+.quick-add-panel {
+  margin-bottom: 20px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: box-shadow .15s;
+}
+
+.quick-add-panel.focused { box-shadow: 0 0 0 2px rgba(55,53,47,.15); }
+
+.quick-add-input-row {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+}
+
+.quick-add-icon {
+  color: var(--gray-400);
+  font-size: 16px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+#quick-add-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  background: transparent;
+  padding: 14px 0;
+}
+
+#quick-add-input::placeholder { color: var(--gray-400); }
+
+.quick-add-options {
+  display: none;
+  padding: 0 16px 14px;
+  border-top: 1px solid var(--border);
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quick-add-options.open { display: flex; }
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.chip-label {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  letter-spacing: .05em;
+  min-width: 52px;
+}
+
+.chip {
+  padding: 4px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all .12s;
+  background: #fff;
+  color: var(--ink-soft);
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chip:hover { border-color: var(--ink-soft); color: var(--ink); }
+.chip.selected { background: var(--ink); border-color: var(--ink); color: #fff; }
+.chip.color-chip.selected { color: #fff; }
+
+.chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.quick-add-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all .12s;
+  font-weight: 500;
+}
+
+.btn-ghost { background: none; border: 1px solid var(--gray-300); color: var(--ink-soft); }
+.btn-ghost:hover { background: var(--gray-100); color: var(--ink); }
+.btn-primary { background: var(--ink); border: 1px solid var(--ink); color: #fff; }
+.btn-primary:hover { opacity: .85; }
+.btn-danger { background: var(--red-500); border: 1px solid var(--red-500); color: #fff; }
+.btn-danger:hover { opacity: .85; }
+
+/* ─── Task Layout ─── */
+.task-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* ─── Timeline ─── */
+.timeline-panel {
+  width: 280px;
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.timeline-header {
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: .05em;
+}
+
+.timeline-scroll {
+  overflow-y: auto;
+  max-height: calc(100vh - 260px);
+  min-height: 400px;
+}
+
+.timeline-slot {
+  display: flex;
+  align-items: flex-start;
+  min-height: 44px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  transition: background .1s;
+}
+
+.timeline-slot:last-child { border-bottom: none; }
+
+.timeline-slot.drag-over { background: rgba(74,127,165,.06); }
+.timeline-slot.drag-over::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1.5px dashed var(--blue-500);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.timeline-time {
+  width: 42px;
+  padding: 12px 8px 4px 12px;
+  font-size: 11px;
+  color: var(--gray-500);
+  flex-shrink: 0;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-content {
+  flex: 1;
+  padding: 6px 8px 6px 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.timeline-task-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11.5px;
+  max-width: 100%;
+  word-break: break-all;
+  cursor: default;
+}
+
+.timeline-task-chip.completed-chip { background: var(--gray-400); }
+
+.timeline-task-chip:hover { opacity: .85; cursor: pointer; }
+
+/* ─── Task List ─── */
+.tasklist-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.tasklist-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+
+.tasklist-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: .05em;
+}
+
+.sort-btns {
+  display: flex;
+  gap: 2px;
+  background: var(--gray-100);
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.sort-btn {
+  padding: 4px 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 11.5px;
+  font-family: inherit;
+  color: var(--ink-soft);
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all .12s;
+}
+
+.sort-btn.active { background: #fff; color: var(--ink); box-shadow: var(--shadow-sm); }
+
+.task-list { display: flex; flex-direction: column; gap: 2px; }
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: default;
+  transition: box-shadow .12s, opacity .12s;
+  user-select: none;
+}
+
+.task-row:hover { box-shadow: var(--shadow-sm); }
+.task-row.dragging { opacity: .4; box-shadow: none; }
+.task-row.drag-placeholder { background: var(--gray-100); border-style: dashed; }
+.task-row.completed { opacity: .45; }
+
+.drag-handle {
+  color: var(--gray-400);
+  cursor: grab;
+  flex-shrink: 0;
+  font-size: 13px;
+  padding: 2px;
+  opacity: 0;
+  transition: opacity .1s;
+}
+
+.task-row:hover .drag-handle { opacity: 1; }
+.drag-handle:active { cursor: grabbing; }
+
+.task-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gray-300);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.task-check:hover { border-color: var(--green-500); }
+.task-check.checked { background: var(--green-500); border-color: var(--green-500); }
+.task-check.checked::after { content: '✓'; color: #fff; font-size: 10px; font-weight: 700; }
+
+.importance-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.task-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-title.completed-text { text-decoration: line-through; color: var(--ink-soft); }
+
+.task-title-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  background: transparent;
+  border-bottom: 1.5px solid var(--blue-500);
+}
+
+.task-badge {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-pinned { background: rgba(74,127,165,.12); color: var(--blue-500); }
+
+.badge-category {
+  background: rgba(55,53,47,.06);
+  color: var(--ink-soft);
+}
+
+.badge-hours {
+  background: var(--gray-100);
+  color: var(--ink-soft);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.badge-hours:hover { border-color: var(--gray-300); }
+
+.task-delete {
+  opacity: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all .12s;
+  flex-shrink: 0;
+}
+
+.task-row:hover .task-delete { opacity: 1; }
+.task-delete:hover { background: var(--gray-100); color: var(--red-500); }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--ink-soft);
+}
+
+.empty-state-icon { font-size: 36px; margin-bottom: 12px; opacity: .5; }
+.empty-state-text { font-size: 14px; }
+
+/* ─── Calendar Tab ─── */
+.calendar-panel {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cal-month-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cal-nav-btn {
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--ink-soft);
+  transition: all .12s;
+}
+
+.cal-nav-btn:hover { background: var(--gray-100); color: var(--ink); }
+
+.calendar-grid { padding: 0; }
+
+.cal-week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+
+.cal-day-name {
+  text-align: center;
+  padding: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: .04em;
+}
+
+.cal-cells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.cal-cell {
+  min-height: 90px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 8px;
+  cursor: pointer;
+  transition: background .1s;
+  position: relative;
+}
+
+.cal-cell:nth-child(7n) { border-right: none; }
+
+.cal-cell:hover { background: var(--gray-50); }
+.cal-cell.today { background: rgba(104,136,110,.05); }
+.cal-cell.other-month { opacity: .4; }
+
+.cal-date {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+
+.cal-cell.today .cal-date {
+  background: var(--green-500);
+  color: #fff;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+}
+
+.cal-task-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.cal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gray-400);
+}
+
+.cal-dot.done { background: var(--green-500); }
+
+.cal-count {
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  margin-top: 3px;
+}
+
+.cal-expanded {
+  display: none;
+  grid-column: 1 / -1;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 20px;
+}
+
+.cal-expanded.open { display: block; }
+.cal-expanded-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+  letter-spacing: .04em;
+}
+
+/* ─── Settings Tab ─── */
+.settings-section {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-top: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.settings-section-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-list { padding: 8px 0; }
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  transition: background .1s;
+}
+
+.settings-item:hover { background: var(--gray-50); }
+
+.color-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.settings-item-name {
+  flex: 1;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.settings-delete-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-family: inherit;
+  transition: all .12s;
+  opacity: 0;
+}
+
+.settings-item:hover .settings-delete-btn { opacity: 1; }
+.settings-delete-btn:hover { background: var(--gray-100); color: var(--red-500); }
+
+.add-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+}
+
+#cat-color-picker, #proj-color-picker {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--gray-300);
+  padding: 2px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.add-form input[type="text"] {
+  flex: 1;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .12s;
+}
+
+.add-form input[type="text"]:focus { border-color: var(--ink-soft); }
+
+.data-row {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.data-row-label { font-size: 13.5px; color: var(--ink); }
+.data-count { font-size: 13px; color: var(--ink-soft); font-weight: 500; }
+
+/* ─── Modal / Dialog ─── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(15,15,15,.35);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 24px;
+  max-width: 360px;
+  width: 90%;
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--border);
+}
+
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+.modal-body { font-size: 13.5px; color: var(--ink-soft); margin-bottom: 20px; line-height: 1.6; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ─── Hours Popover ─── */
+.hours-popover {
+  position: absolute;
+  background: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  z-index: 150;
+  padding: 10px;
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 200px;
+}
+
+.hours-popover.open { display: flex; }
+
+.hours-option {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid var(--gray-200);
+  background: #fff;
+  color: var(--ink-soft);
+  font-family: inherit;
+  transition: all .1s;
+}
+
+.hours-option:hover { background: var(--gray-100); color: var(--ink); }
+.hours-option.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* ─── Date Input ─── */
+#custom-date-input {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--ink);
+  outline: none;
+  display: none;
+}
+
+#custom-date-input.show { display: inline-block; }
+
+/* ─── Install Banner ─── */
+#install-banner {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 300;
+  font-size: 13.5px;
+  align-items: center;
+  gap: 12px;
+}
+
+#install-banner.show { display: flex; }
+
+#install-banner button {
+  background: #fff;
+  color: var(--ink);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#dismiss-install {
+  background: none !important;
+  color: rgba(255,255,255,.6) !important;
+  padding: 4px 8px !important;
+  font-weight: 400 !important;
+  font-size: 18px !important;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  #main { padding: 0 14px 60px; }
+  .task-layout { flex-direction: column; }
+  .timeline-panel { width: 100%; }
+  .hero-stats { gap: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header id="header">
+  <div class="logo">TASKDOCK</div>
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="tasks">タスク</button>
+    <button class="tab-btn" data-tab="calendar">カレンダー</button>
+    <button class="tab-btn" data-tab="settings">設定</button>
+  </nav>
+</header>
+
+<!-- Main -->
+<div id="main">
+
+  <!-- ── Tasks Tab ── -->
+  <div id="tab-tasks" class="tab-panel active">
+
+    <!-- Hero Card -->
+    <div class="hero-card">
+      <div class="hero-date" id="hero-date"></div>
+      <div class="hero-stats">
+        <div class="hero-stat-item">
+          <span class="hero-stat-value" id="stat-rate">0%</span>
+          <span class="hero-stat-label">達成率</span>
+        </div>
+        <div class="hero-stat-item">
+          <span class="hero-stat-value" id="stat-done">0/0</span>
+          <span class="hero-stat-label">完了 / 合計</span>
+        </div>
+        <div class="hero-stat-item">
+          <span class="hero-stat-value" id="stat-hours">0h</span>
+          <span class="hero-stat-label">完了時間</span>
+        </div>
+        <div class="hero-stat-item">
+          <span class="hero-stat-value" id="stat-total-hours">0h</span>
+          <span class="hero-stat-label">合計予定</span>
+        </div>
+      </div>
+      <div class="hero-progress-bar">
+        <div class="hero-progress-fill" id="hero-progress" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Quick Add Panel -->
+    <div class="quick-add-panel" id="quick-add-panel">
+      <div class="quick-add-input-row">
+        <span class="quick-add-icon">＋</span>
+        <input type="text" id="quick-add-input" placeholder="タスクを追加...">
+      </div>
+      <div class="quick-add-options" id="quick-add-options">
+        <!-- Deadline -->
+        <div class="chip-row">
+          <span class="chip-label">期限</span>
+          <button class="chip selected" data-group="deadline" data-value="today">今日</button>
+          <button class="chip" data-group="deadline" data-value="tomorrow">明日</button>
+          <button class="chip" data-group="deadline" data-value="next-week">来週</button>
+          <button class="chip" data-group="deadline" data-value="none">未定</button>
+          <button class="chip" data-group="deadline" data-value="custom">日付指定</button>
+          <input type="date" id="custom-date-input">
+        </div>
+        <!-- Importance -->
+        <div class="chip-row">
+          <span class="chip-label">重要度</span>
+          <button class="chip color-chip" data-group="importance" data-value="high" style="border-color:#b5544d;color:#b5544d">
+            <span class="chip-dot" style="background:#b5544d"></span>高
+          </button>
+          <button class="chip color-chip selected" data-group="importance" data-value="medium" style="border-color:#a88f5c;color:#a88f5c">
+            <span class="chip-dot" style="background:#a88f5c"></span>中
+          </button>
+          <button class="chip color-chip" data-group="importance" data-value="low" style="border-color:#9b9a95;color:#9b9a95">
+            <span class="chip-dot" style="background:#9b9a95"></span>低
+          </button>
+          <button class="chip" data-group="importance" data-value="none">なし</button>
+        </div>
+        <!-- Category -->
+        <div class="chip-row" id="chip-row-category">
+          <span class="chip-label">カテゴリ</span>
+        </div>
+        <!-- Project -->
+        <div class="chip-row" id="chip-row-project">
+          <span class="chip-label">プロジェクト</span>
+        </div>
+        <!-- Estimated Hours -->
+        <div class="chip-row">
+          <span class="chip-label">予定時間</span>
+          <button class="chip" data-group="hours" data-value="0.5">0.5h</button>
+          <button class="chip selected" data-group="hours" data-value="1">1h</button>
+          <button class="chip" data-group="hours" data-value="2">2h</button>
+          <button class="chip" data-group="hours" data-value="3">3h</button>
+          <button class="chip" data-group="hours" data-value="4">4h</button>
+        </div>
+        <div class="quick-add-actions">
+          <button class="btn btn-ghost" id="quick-cancel-btn">キャンセル</button>
+          <button class="btn btn-primary" id="quick-add-btn">追加</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Layout -->
+    <div class="task-layout">
+
+      <!-- Timeline -->
+      <div class="timeline-panel">
+        <div class="timeline-header">タイムライン</div>
+        <div class="timeline-scroll" id="timeline-scroll">
+          <!-- slots rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Task List -->
+      <div class="tasklist-panel">
+        <div class="tasklist-header">
+          <span class="tasklist-title">タスク一覧</span>
+          <div class="sort-btns">
+            <button class="sort-btn active" data-sort="date">期日順</button>
+            <button class="sort-btn" data-sort="importance">重要度順</button>
+          </div>
+        </div>
+        <div class="task-list" id="task-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Calendar Tab ── -->
+  <div id="tab-calendar" class="tab-panel">
+    <div class="calendar-panel">
+      <div class="calendar-nav">
+        <button class="cal-nav-btn" id="cal-prev">‹ 前月</button>
+        <span class="cal-month-label" id="cal-month-label"></span>
+        <button class="cal-nav-btn" id="cal-next">翌月 ›</button>
+      </div>
+      <div class="calendar-grid">
+        <div class="cal-week-header">
+          <div class="cal-day-name" style="color:#b5544d">日</div>
+          <div class="cal-day-name">月</div>
+          <div class="cal-day-name">火</div>
+          <div class="cal-day-name">水</div>
+          <div class="cal-day-name">木</div>
+          <div class="cal-day-name">金</div>
+          <div class="cal-day-name" style="color:#4a7fa5">土</div>
+        </div>
+        <div class="cal-cells" id="cal-cells"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings Tab ── -->
+  <div id="tab-settings" class="tab-panel">
+
+    <!-- Categories -->
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <span>カテゴリ</span>
+      </div>
+      <div class="settings-list" id="cat-list"></div>
+      <div class="add-form">
+        <input type="color" id="cat-color-picker" value="#3b82f6">
+        <input type="text" id="cat-name-input" placeholder="カテゴリ名" maxlength="20">
+        <button class="btn btn-primary" id="cat-add-btn">追加</button>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <div class="settings-section">
+      <div class="settings-section-header">
+        <span>プロジェクト</span>
+      </div>
+      <div class="settings-list" id="proj-list"></div>
+      <div class="add-form">
+        <input type="color" id="proj-color-picker" value="#8b5cf6">
+        <input type="text" id="proj-name-input" placeholder="プロジェクト名" maxlength="20">
+        <button class="btn btn-primary" id="proj-add-btn">追加</button>
+      </div>
+    </div>
+
+    <!-- Data Management -->
+    <div class="settings-section">
+      <div class="settings-section-header">データ管理</div>
+      <div class="data-row">
+        <span class="data-row-label">タスク総数</span>
+        <span class="data-count" id="data-task-count">0 件</span>
+      </div>
+      <div class="data-row" style="border-top:1px solid var(--border)">
+        <span class="data-row-label">全データを削除</span>
+        <button class="btn btn-danger" id="delete-all-btn">削除...</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hours Popover -->
+<div class="hours-popover" id="hours-popover"></div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">確認</div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- Install Banner -->
+<div id="install-banner">
+  <span>TASKDOCKをインストールできます</span>
+  <button id="install-btn">インストール</button>
+  <button id="dismiss-install">✕</button>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA LAYER
+// ─────────────────────────────────────────────
+const KEY = {
+  tasks: 'taskdock_tasks',
+  projects: 'taskdock_projects',
+  workTypes: 'taskdock_workTypes',
+};
+
+const DEFAULT_CATEGORIES = [
+  { id: 'wt-1', label: 'コーディング', color: '#3b82f6' },
+  { id: 'wt-2', label: 'デザイン', color: '#8b5cf6' },
+  { id: 'wt-3', label: 'ミーティング', color: '#f59e0b' },
+  { id: 'wt-4', label: 'ドキュメント', color: '#6366f1' },
+  { id: 'wt-5', label: 'その他', color: '#64748b' },
+];
+
+function load(key, fallback) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+}
+
+function save(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+let tasks = load(KEY.tasks, []);
+let projects = load(KEY.projects, []);
+let workTypes = load(KEY.workTypes, DEFAULT_CATEGORIES);
+
+function saveTasks() { save(KEY.tasks, tasks); }
+function saveProjects() { save(KEY.projects, projects); }
+function saveWorkTypes() { save(KEY.workTypes, workTypes); }
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function dateStr(d) {
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+function today() { return dateStr(new Date()); }
+
+function addDays(dateS, n) {
+  const d = new Date(dateS + 'T00:00:00');
+  d.setDate(d.getDate() + n);
+  return dateStr(d);
+}
+
+function nextMonday() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = (8 - day) % 7 || 7;
+  d.setDate(d.getDate() + diff);
+  return dateStr(d);
+}
+
+function importanceColor(imp) {
+  return imp === 'high' ? '#b5544d' : imp === 'medium' ? '#a88f5c' : imp === 'low' ? '#9b9a95' : 'transparent';
+}
+
+function importanceOrder(imp) {
+  return imp === 'high' ? 0 : imp === 'medium' ? 1 : imp === 'low' ? 2 : 3;
+}
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let currentTab = 'tasks';
+let sortMode = 'date';
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let expandedCalDate = null;
+let deferredInstallPrompt = null;
+
+// Quick add state
+let qa = {
+  deadline: 'today',
+  customDate: '',
+  importance: 'medium',
+  categoryId: null,
+  projectId: null,
+  hours: 1,
+};
+
+// Drag state
+let dragTaskId = null;
+let dragOverSlot = null;
+
+// ─────────────────────────────────────────────
+// TABS
+// ─────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentTab = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + currentTab).classList.add('active');
+    if (currentTab === 'calendar') renderCalendar();
+    if (currentTab === 'settings') renderSettings();
+  });
+});
+
+// ─────────────────────────────────────────────
+// HERO CARD
+// ─────────────────────────────────────────────
+function renderHero() {
+  const d = new Date();
+  const weekDays = ['日','月','火','水','木','金','土'];
+  document.getElementById('hero-date').textContent =
+    `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${weekDays[d.getDay()]}）`;
+
+  const todayStr = today();
+  const todayTasks = tasks.filter(t => t.scheduledDate === todayStr);
+  const total = todayTasks.length;
+  const done = todayTasks.filter(t => t.status === 'completed').length;
+  const totalH = todayTasks.reduce((s, t) => s + (t.estimatedHours || 0), 0);
+  const doneH = todayTasks.filter(t => t.status === 'completed').reduce((s, t) => s + (t.estimatedHours || 0), 0);
+  const rate = totalH > 0 ? Math.round(doneH / totalH * 100) : 0;
+
+  document.getElementById('stat-rate').textContent = rate + '%';
+  document.getElementById('stat-done').textContent = `${done}/${total}`;
+  document.getElementById('stat-hours').textContent = doneH + 'h';
+  document.getElementById('stat-total-hours').textContent = totalH + 'h';
+  document.getElementById('hero-progress').style.width = rate + '%';
+}
+
+// ─────────────────────────────────────────────
+// QUICK ADD
+// ─────────────────────────────────────────────
+const qaInput = document.getElementById('quick-add-input');
+const qaOptions = document.getElementById('quick-add-options');
+const qaPanel = document.getElementById('quick-add-panel');
+
+qaInput.addEventListener('focus', () => {
+  qaOptions.classList.add('open');
+  qaPanel.classList.add('focused');
+  renderQaChips();
+});
+
+qaInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); addTask(); }
+  if (e.key === 'Escape') { closeQa(); }
+});
+
+document.getElementById('quick-cancel-btn').addEventListener('click', closeQa);
+document.getElementById('quick-add-btn').addEventListener('click', addTask);
+
+function closeQa() {
+  qaOptions.classList.remove('open');
+  qaPanel.classList.remove('focused');
+  qaInput.value = '';
+  qaInput.blur();
+  qa = { deadline: 'today', customDate: '', importance: 'medium', categoryId: null, projectId: null, hours: 1 };
+  document.getElementById('custom-date-input').classList.remove('show');
+}
+
+function renderQaChips() {
+  // Category chips
+  const catRow = document.getElementById('chip-row-category');
+  const existingCats = catRow.querySelectorAll('[data-group="category"]');
+  existingCats.forEach(el => el.remove());
+  workTypes.forEach(wt => {
+    const btn = document.createElement('button');
+    btn.className = 'chip color-chip' + (qa.categoryId === wt.id ? ' selected' : '');
+    btn.dataset.group = 'category';
+    btn.dataset.value = wt.id;
+    btn.style.borderColor = wt.color;
+    btn.style.color = wt.color;
+    btn.innerHTML = `<span class="chip-dot" style="background:${wt.color}"></span>${wt.label}`;
+    if (qa.categoryId === wt.id) { btn.style.background = wt.color; btn.style.color = '#fff'; }
+    catRow.appendChild(btn);
+  });
+
+  // Project chips
+  const projRow = document.getElementById('chip-row-project');
+  const existingProjs = projRow.querySelectorAll('[data-group="project"]');
+  existingProjs.forEach(el => el.remove());
+  projects.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'chip color-chip' + (qa.projectId === p.id ? ' selected' : '');
+    btn.dataset.group = 'project';
+    btn.dataset.value = p.id;
+    btn.style.borderColor = p.color;
+    btn.style.color = p.color;
+    btn.innerHTML = `<span class="chip-dot" style="background:${p.color}"></span>${p.name}`;
+    if (qa.projectId === p.id) { btn.style.background = p.color; btn.style.color = '#fff'; }
+    projRow.appendChild(btn);
+  });
+}
+
+// Chip click handler (delegated)
+document.getElementById('quick-add-options').addEventListener('click', e => {
+  const chip = e.target.closest('[data-group]');
+  if (!chip) return;
+  const group = chip.dataset.group;
+  const val = chip.dataset.value;
+
+  if (group === 'deadline') {
+    qa.deadline = val;
+    if (val === 'custom') {
+      document.getElementById('custom-date-input').classList.add('show');
+    } else {
+      document.getElementById('custom-date-input').classList.remove('show');
+      qa.customDate = '';
+    }
+    document.querySelectorAll('[data-group="deadline"]').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+  } else if (group === 'importance') {
+    qa.importance = val === 'none' ? null : val;
+    document.querySelectorAll('[data-group="importance"]').forEach(c => {
+      c.classList.remove('selected');
+      c.style.background = '';
+      c.style.color = c.dataset.value === 'none' ? '' : importanceColor(c.dataset.value);
+    });
+    chip.classList.add('selected');
+    if (val !== 'none') { chip.style.background = importanceColor(val); chip.style.color = '#fff'; }
+  } else if (group === 'category') {
+    qa.categoryId = qa.categoryId === val ? null : val;
+    renderQaChips();
+  } else if (group === 'project') {
+    qa.projectId = qa.projectId === val ? null : val;
+    renderQaChips();
+  } else if (group === 'hours') {
+    qa.hours = parseFloat(val);
+    document.querySelectorAll('[data-group="hours"]').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+  }
+});
+
+document.getElementById('custom-date-input').addEventListener('change', e => {
+  qa.customDate = e.target.value;
+});
+
+function resolveDeadline() {
+  if (qa.deadline === 'today') return today();
+  if (qa.deadline === 'tomorrow') return addDays(today(), 1);
+  if (qa.deadline === 'next-week') return nextMonday();
+  if (qa.deadline === 'none') return null;
+  if (qa.deadline === 'custom') return qa.customDate || null;
+  return null;
+}
+
+function addTask() {
+  const title = qaInput.value.trim();
+  if (!title) return;
+  const task = {
+    id: uid(),
+    title,
+    projectId: qa.projectId,
+    workType: qa.categoryId,
+    importance: qa.importance,
+    estimatedHours: qa.hours,
+    status: 'pending',
+    scheduledDate: resolveDeadline(),
+    pinnedHour: null,
+    order: tasks.length,
+    completedAt: null,
+    createdAt: new Date().toISOString(),
+  };
+  tasks.push(task);
+  saveTasks();
+  closeQa();
+  renderTaskList();
+  renderHero();
+  renderTimeline();
+}
+
+// ─────────────────────────────────────────────
+// TIMELINE
+// ─────────────────────────────────────────────
+function renderTimeline() {
+  const container = document.getElementById('timeline-scroll');
+  container.innerHTML = '';
+  const todayStr = today();
+
+  for (let h = 6; h <= 23; h++) {
+    const slot = document.createElement('div');
+    slot.className = 'timeline-slot';
+    slot.dataset.hour = h;
+    slot.innerHTML = `<div class="timeline-time">${h}:00</div><div class="timeline-content" data-hour="${h}"></div>`;
+
+    slot.addEventListener('dragover', e => {
+      e.preventDefault();
+      slot.classList.add('drag-over');
+      dragOverSlot = h;
+    });
+
+    slot.addEventListener('dragleave', () => {
+      slot.classList.remove('drag-over');
+      if (dragOverSlot === h) dragOverSlot = null;
+    });
+
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('drag-over');
+      if (dragTaskId) {
+        const t = tasks.find(t => t.id === dragTaskId);
+        if (t) {
+          t.pinnedHour = h;
+          if (!t.scheduledDate) t.scheduledDate = todayStr;
+          saveTasks();
+          renderTimeline();
+          renderTaskList();
+        }
+        dragTaskId = null;
+      }
+    });
+
+    container.appendChild(slot);
+  }
+
+  // Fill pinned tasks
+  const pinnedTasks = tasks.filter(t => t.pinnedHour !== null && t.scheduledDate === todayStr);
+  pinnedTasks.forEach(t => {
+    const content = container.querySelector(`.timeline-content[data-hour="${t.pinnedHour}"]`);
+    if (!content) return;
+    const chip = document.createElement('div');
+    chip.className = 'timeline-task-chip' + (t.status === 'completed' ? ' completed-chip' : '');
+    chip.textContent = t.title;
+    chip.title = 'ダブルクリックで解除';
+    chip.addEventListener('dblclick', () => {
+      t.pinnedHour = null;
+      saveTasks();
+      renderTimeline();
+      renderTaskList();
+    });
+    content.appendChild(chip);
+  });
+}
+
+// ─────────────────────────────────────────────
+// TASK LIST
+// ─────────────────────────────────────────────
+function getSortedTasks() {
+  const todayStr = today();
+  let list = [...tasks];
+  if (sortMode === 'date') {
+    list.sort((a, b) => {
+      const da = a.scheduledDate || '9999-99-99';
+      const db = b.scheduledDate || '9999-99-99';
+      if (da !== db) return da < db ? -1 : 1;
+      return a.order - b.order;
+    });
+  } else {
+    list.sort((a, b) => {
+      const ia = importanceOrder(a.importance);
+      const ib = importanceOrder(b.importance);
+      if (ia !== ib) return ia - ib;
+      return a.order - b.order;
+    });
+  }
+  // pending first, completed last
+  const pending = list.filter(t => t.status === 'pending');
+  const done = list.filter(t => t.status === 'completed');
+  return [...pending, ...done];
+}
+
+function renderTaskList() {
+  const container = document.getElementById('task-list');
+  const sorted = getSortedTasks();
+  container.innerHTML = '';
+
+  if (sorted.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">✓</div><div class="empty-state-text">タスクがありません<br>上のパネルから追加してください</div></div>`;
+    return;
+  }
+
+  sorted.forEach(task => {
+    const row = createTaskRow(task);
+    container.appendChild(row);
+  });
+}
+
+function createTaskRow(task) {
+  const row = document.createElement('div');
+  row.className = 'task-row' + (task.status === 'completed' ? ' completed' : '');
+  row.dataset.id = task.id;
+  row.draggable = true;
+
+  // Drag events for reordering / timeline
+  row.addEventListener('dragstart', e => {
+    dragTaskId = task.id;
+    row.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    document.querySelectorAll('.task-row').forEach(r => {
+      if (r !== row) r.style.opacity = '.4';
+    });
+  });
+
+  row.addEventListener('dragend', () => {
+    row.classList.remove('dragging');
+    document.querySelectorAll('.task-row').forEach(r => r.style.opacity = '');
+    dragTaskId = null;
+  });
+
+  const wt = task.workType ? workTypes.find(w => w.id === task.workType) : null;
+  const impColor = importanceColor(task.importance);
+  const pinnedBadge = task.pinnedHour !== null
+    ? `<span class="task-badge badge-pinned">${task.pinnedHour}:00</span>` : '';
+  const catBadge = wt
+    ? `<span class="task-badge badge-category" style="background:${wt.color}18;color:${wt.color}">${wt.label}</span>` : '';
+  const hoursStr = task.estimatedHours ? task.estimatedHours + 'h' : '—';
+
+  row.innerHTML = `
+    <span class="drag-handle" title="ドラッグして並び替え">⠿</span>
+    <div class="task-check ${task.status === 'completed' ? 'checked' : ''}" data-action="toggle"></div>
+    <span class="importance-dot" style="background:${impColor}"></span>
+    <span class="task-title ${task.status === 'completed' ? 'completed-text' : ''}" data-action="edit-start">${escHtml(task.title)}</span>
+    ${pinnedBadge}
+    ${catBadge}
+    <span class="task-badge badge-hours" data-action="hours" title="クリックして変更">${hoursStr}</span>
+    <button class="task-delete" data-action="delete" title="削除">✕</button>
+  `;
+
+  row.addEventListener('click', e => {
+    const action = e.target.dataset.action || e.target.closest('[data-action]')?.dataset.action;
+    if (!action) return;
+    if (action === 'toggle') toggleTask(task.id);
+    if (action === 'edit-start') startInlineEdit(task.id, row);
+    if (action === 'hours') showHoursPopover(task.id, e.target.closest('[data-action]'));
+    if (action === 'delete') confirmDeleteTask(task.id);
+  });
+
+  return row;
+}
+
+function toggleTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.status = t.status === 'completed' ? 'pending' : 'completed';
+  t.completedAt = t.status === 'completed' ? new Date().toISOString() : null;
+  saveTasks();
+  renderTaskList();
+  renderHero();
+  renderTimeline();
+}
+
+function startInlineEdit(id, row) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  const titleEl = row.querySelector('.task-title');
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'task-title-input';
+  input.value = t.title;
+  titleEl.replaceWith(input);
+  input.focus();
+  input.select();
+
+  const finish = () => {
+    const val = input.value.trim();
+    if (val && val !== t.title) {
+      t.title = val;
+      saveTasks();
+    }
+    renderTaskList();
+    renderTimeline();
+  };
+
+  input.addEventListener('blur', finish);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.value = t.title; input.blur(); }
+  });
+}
+
+// Hours Popover
+const hoursPopover = document.getElementById('hours-popover');
+let hoursPopoverTarget = null;
+
+function showHoursPopover(taskId, anchor) {
+  hoursPopoverTarget = taskId;
+  const t = tasks.find(t => t.id === taskId);
+  const options = [0.5, 1, 1.5, 2, 3, 4, 6, 8];
+  hoursPopover.innerHTML = '';
+  options.forEach(h => {
+    const btn = document.createElement('button');
+    btn.className = 'hours-option' + (t && t.estimatedHours === h ? ' active' : '');
+    btn.textContent = h + 'h';
+    btn.addEventListener('click', () => {
+      const task = tasks.find(t => t.id === taskId);
+      if (task) { task.estimatedHours = h; saveTasks(); renderTaskList(); renderHero(); }
+      closeHoursPopover();
+    });
+    hoursPopover.appendChild(btn);
+  });
+
+  const rect = anchor.getBoundingClientRect();
+  hoursPopover.style.top = (rect.bottom + window.scrollY + 6) + 'px';
+  hoursPopover.style.left = (rect.left + window.scrollX) + 'px';
+  hoursPopover.classList.add('open');
+}
+
+function closeHoursPopover() {
+  hoursPopover.classList.remove('open');
+  hoursPopoverTarget = null;
+}
+
+document.addEventListener('click', e => {
+  if (hoursPopover.classList.contains('open') && !hoursPopover.contains(e.target) && !e.target.closest('[data-action="hours"]')) {
+    closeHoursPopover();
+  }
+});
+
+// Delete task
+function confirmDeleteTask(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  showModal('タスクを削除', `「${t.title}」を削除しますか？この操作は取り消せません。`, [
+    { label: 'キャンセル', cls: 'btn-ghost', action: hideModal },
+    { label: '削除', cls: 'btn-danger', action: () => { tasks = tasks.filter(t => t.id !== id); saveTasks(); hideModal(); renderTaskList(); renderHero(); renderTimeline(); } },
+  ]);
+}
+
+// Sort
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    sortMode = btn.dataset.sort;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTaskList();
+  });
+});
+
+// ─────────────────────────────────────────────
+// CALENDAR
+// ─────────────────────────────────────────────
+document.getElementById('cal-prev').addEventListener('click', () => {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+});
+
+document.getElementById('cal-next').addEventListener('click', () => {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+});
+
+function renderCalendar() {
+  const label = document.getElementById('cal-month-label');
+  label.textContent = `${calYear}年${calMonth+1}月`;
+
+  const cells = document.getElementById('cal-cells');
+  cells.innerHTML = '';
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const lastDate = new Date(calYear, calMonth+1, 0).getDate();
+  const todayStr = today();
+
+  let expandedRow = null;
+  let expandedEl = null;
+
+  // Fill leading empty days
+  const totalCells = firstDay + lastDate;
+  const rows = Math.ceil(totalCells / 7);
+
+  for (let r = 0; r < rows; r++) {
+    for (let dow = 0; dow < 7; dow++) {
+      const cellIndex = r * 7 + dow;
+      const dayNum = cellIndex - firstDay + 1;
+      const cell = document.createElement('div');
+
+      if (dayNum < 1 || dayNum > lastDate) {
+        cell.className = 'cal-cell other-month';
+        cell.innerHTML = `<div class="cal-date">${dayNum < 1 ? '' : dayNum}</div>`;
+      } else {
+        const dStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`;
+        const dayTasks = tasks.filter(t => t.scheduledDate === dStr);
+        const done = dayTasks.filter(t => t.status === 'completed');
+        const pending = dayTasks.filter(t => t.status === 'pending');
+
+        cell.className = 'cal-cell' + (dStr === todayStr ? ' today' : '');
+        cell.dataset.date = dStr;
+
+        let dateEl;
+        if (dStr === todayStr) {
+          dateEl = `<div class="cal-date">${dayNum}</div>`;
+        } else {
+          dateEl = `<div class="cal-date" style="color:${dow===0?'#b5544d':dow===6?'#4a7fa5':'var(--ink-soft)'}">${dayNum}</div>`;
+        }
+
+        const dots = dayTasks.map(t =>
+          `<div class="cal-dot ${t.status==='completed'?'done':''}" title="${t.title}"></div>`
+        ).join('');
+
+        cell.innerHTML = `${dateEl}<div class="cal-task-dots">${dots}</div>${dayTasks.length > 0 ? `<div class="cal-count">${dayTasks.length}件</div>` : ''}`;
+
+        cell.addEventListener('click', () => {
+          if (expandedCalDate === dStr) {
+            // collapse
+            expandedCalDate = null;
+            if (expandedEl) { expandedEl.remove(); expandedEl = null; }
+            return;
+          }
+          expandedCalDate = dStr;
+          if (expandedEl) { expandedEl.remove(); expandedEl = null; }
+
+          const exp = document.createElement('div');
+          exp.className = 'cal-expanded open';
+          exp.style.gridColumn = '1 / -1';
+          exp.innerHTML = `<div class="cal-expanded-title">${dStr} のタスク（${dayTasks.length}件）</div>`;
+          if (dayTasks.length === 0) {
+            exp.innerHTML += `<div style="color:var(--ink-soft);font-size:13px">タスクなし</div>`;
+          } else {
+            const ul = document.createElement('div');
+            ul.style.display = 'flex';
+            ul.style.flexDirection = 'column';
+            ul.style.gap = '5px';
+            dayTasks.forEach(t => {
+              const item = document.createElement('div');
+              item.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;';
+              const dot = `<span style="width:7px;height:7px;border-radius:50%;background:${importanceColor(t.importance)};flex-shrink:0;display:inline-block"></span>`;
+              const check = `<span style="color:${t.status==='completed'?'var(--green-500)':'var(--gray-400)'};font-size:12px">${t.status==='completed'?'✓':'○'}</span>`;
+              item.innerHTML = `${check}${dot}<span style="${t.status==='completed'?'text-decoration:line-through;color:var(--ink-soft)':''}">${escHtml(t.title)}</span>`;
+              ul.appendChild(item);
+            });
+            exp.appendChild(ul);
+          }
+
+          // Insert after current row
+          const currentRowEnd = (r + 1) * 7;
+          const nextRowFirstCell = cells.children[currentRowEnd];
+          if (nextRowFirstCell) {
+            cells.insertBefore(exp, nextRowFirstCell);
+          } else {
+            cells.appendChild(exp);
+          }
+          expandedEl = exp;
+        });
+      }
+
+      cells.appendChild(cell);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────
+function renderSettings() {
+  renderCatList();
+  renderProjList();
+  document.getElementById('data-task-count').textContent = tasks.length + ' 件';
+}
+
+function renderCatList() {
+  const list = document.getElementById('cat-list');
+  list.innerHTML = '';
+  workTypes.forEach(wt => {
+    const item = document.createElement('div');
+    item.className = 'settings-item';
+    item.innerHTML = `
+      <div class="color-swatch" style="background:${wt.color}"></div>
+      <span class="settings-item-name">${escHtml(wt.label)}</span>
+      <button class="settings-delete-btn" data-id="${wt.id}">削除</button>
+    `;
+    item.querySelector('.settings-delete-btn').addEventListener('click', () => {
+      showModal('カテゴリを削除', `「${wt.label}」を削除しますか？`, [
+        { label: 'キャンセル', cls: 'btn-ghost', action: hideModal },
+        { label: '削除', cls: 'btn-danger', action: () => {
+          workTypes = workTypes.filter(w => w.id !== wt.id);
+          tasks.forEach(t => { if (t.workType === wt.id) t.workType = null; });
+          saveWorkTypes(); saveTasks(); hideModal(); renderSettings();
+        }},
+      ]);
+    });
+    list.appendChild(item);
+  });
+}
+
+function renderProjList() {
+  const list = document.getElementById('proj-list');
+  list.innerHTML = '';
+  projects.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'settings-item';
+    item.innerHTML = `
+      <div class="color-swatch" style="background:${p.color}"></div>
+      <span class="settings-item-name">${escHtml(p.name)}</span>
+      <button class="settings-delete-btn" data-id="${p.id}">削除</button>
+    `;
+    item.querySelector('.settings-delete-btn').addEventListener('click', () => {
+      showModal('プロジェクトを削除', `「${p.name}」を削除しますか？`, [
+        { label: 'キャンセル', cls: 'btn-ghost', action: hideModal },
+        { label: '削除', cls: 'btn-danger', action: () => {
+          projects = projects.filter(pr => pr.id !== p.id);
+          tasks.forEach(t => { if (t.projectId === p.id) t.projectId = null; });
+          saveProjects(); saveTasks(); hideModal(); renderSettings();
+        }},
+      ]);
+    });
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('cat-add-btn').addEventListener('click', () => {
+  const name = document.getElementById('cat-name-input').value.trim();
+  const color = document.getElementById('cat-color-picker').value;
+  if (!name) return;
+  workTypes.push({ id: uid(), label: name, color });
+  saveWorkTypes();
+  document.getElementById('cat-name-input').value = '';
+  renderSettings();
+});
+
+document.getElementById('cat-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('cat-add-btn').click();
+});
+
+document.getElementById('proj-add-btn').addEventListener('click', () => {
+  const name = document.getElementById('proj-name-input').value.trim();
+  const color = document.getElementById('proj-color-picker').value;
+  if (!name) return;
+  projects.push({ id: uid(), name, color });
+  saveProjects();
+  document.getElementById('proj-name-input').value = '';
+  renderSettings();
+});
+
+document.getElementById('proj-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('proj-add-btn').click();
+});
+
+document.getElementById('delete-all-btn').addEventListener('click', () => {
+  showModal('全データを削除', 'タスク・プロジェクト・カテゴリを含むすべてのデータを削除します。この操作は取り消せません。', [
+    { label: 'キャンセル', cls: 'btn-ghost', action: hideModal },
+    { label: 'すべて削除', cls: 'btn-danger', action: () => {
+      tasks = []; projects = []; workTypes = [...DEFAULT_CATEGORIES];
+      saveTasks(); saveProjects(); saveWorkTypes();
+      hideModal(); renderAll();
+    }},
+  ]);
+});
+
+// ─────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────
+function showModal(title, body, actions) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  const actDiv = document.getElementById('modal-actions');
+  actDiv.innerHTML = '';
+  actions.forEach(a => {
+    const btn = document.createElement('button');
+    btn.className = 'btn ' + a.cls;
+    btn.textContent = a.label;
+    btn.addEventListener('click', a.action);
+    actDiv.appendChild(btn);
+  });
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function hideModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) hideModal();
+});
+
+// ─────────────────────────────────────────────
+// UTIL
+// ─────────────────────────────────────────────
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderAll() {
+  renderHero();
+  renderTimeline();
+  renderTaskList();
+  if (currentTab === 'calendar') renderCalendar();
+  if (currentTab === 'settings') renderSettings();
+}
+
+// ─────────────────────────────────────────────
+// PWA
+// ─────────────────────────────────────────────
+// Inline manifest via link tag
+const manifestData = {
+  name: 'TASKDOCK',
+  short_name: 'TASKDOCK',
+  description: 'シンプルなタスク管理アプリ',
+  start_url: '.',
+  display: 'standalone',
+  background_color: '#fafaf9',
+  theme_color: '#fafaf9',
+  icons: [
+    { src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="32" fill="%2337352f"/><text x="96" y="130" font-size="110" text-anchor="middle" fill="white" font-family="system-ui">✓</text></svg>', sizes: '192x192', type: 'image/svg+xml' },
+    { src: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="%2337352f"/><text x="256" y="360" font-size="300" text-anchor="middle" fill="white" font-family="system-ui">✓</text></svg>', sizes: '512x512', type: 'image/svg+xml' },
+  ],
+};
+
+const blob = new Blob([JSON.stringify(manifestData)], { type: 'application/manifest+json' });
+const manifestURL = URL.createObjectURL(blob);
+const manifestLink = document.createElement('link');
+manifestLink.rel = 'manifest';
+manifestLink.href = manifestURL;
+document.head.appendChild(manifestLink);
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  const swCode = `
+const CACHE = 'taskdock-v1';
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./'])));
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+  self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});
+`;
+  const swBlob = new Blob([swCode], { type: 'application/javascript' });
+  const swURL = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swURL, { scope: './' }).catch(() => {});
+}
+
+// Install prompt
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('install-banner').classList.add('show');
+});
+
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  document.getElementById('install-banner').classList.remove('show');
+});
+
+document.getElementById('dismiss-install').addEventListener('click', () => {
+  document.getElementById('install-banner').classList.remove('show');
+});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
