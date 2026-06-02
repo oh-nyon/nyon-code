@@ -741,15 +741,42 @@ body {
   border-top: 1px solid var(--border);
 }
 
-#cat-color-picker, #proj-color-picker {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  border: 1px solid var(--gray-300);
-  padding: 2px;
-  cursor: pointer;
-  background: #fff;
+.color-palette {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
 }
+
+.color-swatch-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .12s, border-color .12s;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.color-swatch-btn:hover { transform: scale(1.15); }
+.color-swatch-btn.selected { border-color: var(--ink); box-shadow: 0 0 0 2px #fff inset; }
+
+/* inline color palette popover in settings list */
+.color-edit-popover {
+  display: none;
+  position: absolute;
+  background: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  z-index: 150;
+  padding: 10px;
+  gap: 7px;
+  flex-wrap: wrap;
+  width: 188px;
+}
+
+.color-edit-popover.open { display: flex; }
 
 .add-form input[type="text"] {
   flex: 1;
@@ -1057,10 +1084,12 @@ body {
         <span>カテゴリ</span>
       </div>
       <div class="settings-list" id="cat-list"></div>
-      <div class="add-form">
-        <input type="color" id="cat-color-picker" value="#3b82f6">
-        <input type="text" id="cat-name-input" placeholder="カテゴリ名" maxlength="20">
-        <button class="btn btn-primary" id="cat-add-btn">追加</button>
+      <div class="add-form" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div class="color-palette" id="cat-color-palette"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="cat-name-input" placeholder="カテゴリ名" maxlength="20">
+          <button class="btn btn-primary" id="cat-add-btn">追加</button>
+        </div>
       </div>
     </div>
 
@@ -1070,10 +1099,12 @@ body {
         <span>プロジェクト</span>
       </div>
       <div class="settings-list" id="proj-list"></div>
-      <div class="add-form">
-        <input type="color" id="proj-color-picker" value="#8b5cf6">
-        <input type="text" id="proj-name-input" placeholder="プロジェクト名" maxlength="20">
-        <button class="btn btn-primary" id="proj-add-btn">追加</button>
+      <div class="add-form" style="flex-direction:column;align-items:stretch;gap:10px">
+        <div class="color-palette" id="proj-color-palette"></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" id="proj-name-input" placeholder="プロジェクト名" maxlength="20">
+          <button class="btn btn-primary" id="proj-add-btn">追加</button>
+        </div>
       </div>
     </div>
 
@@ -1759,7 +1790,35 @@ function renderCalendar() {
 function renderSettings() {
   renderCatList();
   renderProjList();
+  renderColorPalette('cat-color-palette', catSelectedColor, c => { catSelectedColor = c; });
+  renderColorPalette('proj-color-palette', projSelectedColor, c => { projSelectedColor = c; });
   document.getElementById('data-task-count').textContent = tasks.length + ' 件';
+}
+
+// ─── Preset palette ───
+const PRESET_COLORS = [
+  '#b5544d','#a88f5c','#68886e','#4a7fa5','#6b6ea8',
+  '#9b6ea8','#b8699a','#b87355','#5c8a7a','#6e8ab8',
+  '#9b9a95','#37352f',
+];
+
+let catSelectedColor = PRESET_COLORS[3];
+let projSelectedColor = PRESET_COLORS[4];
+
+function renderColorPalette(containerId, selectedColor, onChange) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  PRESET_COLORS.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'color-swatch-btn' + (c === selectedColor ? ' selected' : '');
+    btn.style.background = c;
+    btn.title = c;
+    btn.addEventListener('click', () => {
+      onChange(c);
+      renderColorPalette(containerId, c, onChange);
+    });
+    container.appendChild(btn);
+  });
 }
 
 function renderCatList() {
@@ -1768,12 +1827,42 @@ function renderCatList() {
   workTypes.forEach(wt => {
     const item = document.createElement('div');
     item.className = 'settings-item';
+    item.style.position = 'relative';
     item.innerHTML = `
-      <div class="color-swatch" style="background:${wt.color}"></div>
+      <button class="color-swatch-btn" style="background:${wt.color};border-color:transparent;width:18px;height:18px" title="色を変更" data-action="color-btn"></button>
       <span class="settings-item-name">${escHtml(wt.label)}</span>
-      <button class="settings-delete-btn" data-id="${wt.id}">削除</button>
+      <button class="settings-delete-btn" data-action="delete">削除</button>
     `;
-    item.querySelector('.settings-delete-btn').addEventListener('click', () => {
+
+    // Color edit popover
+    const popover = document.createElement('div');
+    popover.className = 'color-edit-popover';
+    PRESET_COLORS.forEach(c => {
+      const pb = document.createElement('button');
+      pb.className = 'color-swatch-btn' + (c === wt.color ? ' selected' : '');
+      pb.style.background = c;
+      pb.addEventListener('click', e => {
+        e.stopPropagation();
+        wt.color = c;
+        saveWorkTypes();
+        popover.classList.remove('open');
+        renderCatList();
+        renderQaChips();
+      });
+      popover.appendChild(pb);
+    });
+    item.appendChild(popover);
+
+    item.querySelector('[data-action="color-btn"]').addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.color-edit-popover.open').forEach(p => p !== popover && p.classList.remove('open'));
+      const rect = e.currentTarget.getBoundingClientRect();
+      popover.style.top = (e.currentTarget.offsetTop + e.currentTarget.offsetHeight + 4) + 'px';
+      popover.style.left = e.currentTarget.offsetLeft + 'px';
+      popover.classList.toggle('open');
+    });
+
+    item.querySelector('[data-action="delete"]').addEventListener('click', () => {
       showModal('カテゴリを削除', `「${wt.label}」を削除しますか？`, [
         { label: 'キャンセル', cls: 'btn-ghost', action: hideModal },
         { label: '削除', cls: 'btn-danger', action: () => {
@@ -1783,6 +1872,7 @@ function renderCatList() {
         }},
       ]);
     });
+
     list.appendChild(item);
   });
 }
@@ -1793,12 +1883,41 @@ function renderProjList() {
   projects.forEach(p => {
     const item = document.createElement('div');
     item.className = 'settings-item';
+    item.style.position = 'relative';
     item.innerHTML = `
-      <div class="color-swatch" style="background:${p.color}"></div>
+      <button class="color-swatch-btn" style="background:${p.color};border-color:transparent;width:18px;height:18px" title="色を変更" data-action="color-btn"></button>
       <span class="settings-item-name">${escHtml(p.name)}</span>
-      <button class="settings-delete-btn" data-id="${p.id}">削除</button>
+      <button class="settings-delete-btn" data-action="delete">削除</button>
     `;
-    item.querySelector('.settings-delete-btn').addEventListener('click', () => {
+
+    const popover = document.createElement('div');
+    popover.className = 'color-edit-popover';
+    PRESET_COLORS.forEach(c => {
+      const pb = document.createElement('button');
+      pb.className = 'color-swatch-btn' + (c === p.color ? ' selected' : '');
+      pb.style.background = c;
+      pb.addEventListener('click', e => {
+        e.stopPropagation();
+        p.color = c;
+        saveProjects();
+        popover.classList.remove('open');
+        renderProjList();
+        renderQaChips();
+      });
+      popover.appendChild(pb);
+    });
+    item.appendChild(popover);
+
+    item.querySelector('[data-action="color-btn"]').addEventListener('click', e => {
+      e.stopPropagation();
+      document.querySelectorAll('.color-edit-popover.open').forEach(el => el !== popover && el.classList.remove('open'));
+      const btn = e.currentTarget;
+      popover.style.top = (btn.offsetTop + btn.offsetHeight + 4) + 'px';
+      popover.style.left = btn.offsetLeft + 'px';
+      popover.classList.toggle('open');
+    });
+
+    item.querySelector('[data-action="delete"]').addEventListener('click', () => {
       showModal('プロジェクトを削除', `「${p.name}」を削除しますか？`, [
         { label: 'キャンセル', cls: 'btn-ghost', action: hideModal },
         { label: '削除', cls: 'btn-danger', action: () => {
@@ -1808,15 +1927,20 @@ function renderProjList() {
         }},
       ]);
     });
+
     list.appendChild(item);
   });
 }
 
+// Close popovers on outside click
+document.addEventListener('click', () => {
+  document.querySelectorAll('.color-edit-popover.open').forEach(p => p.classList.remove('open'));
+});
+
 document.getElementById('cat-add-btn').addEventListener('click', () => {
   const name = document.getElementById('cat-name-input').value.trim();
-  const color = document.getElementById('cat-color-picker').value;
   if (!name) return;
-  workTypes.push({ id: uid(), label: name, color });
+  workTypes.push({ id: uid(), label: name, color: catSelectedColor });
   saveWorkTypes();
   document.getElementById('cat-name-input').value = '';
   renderSettings();
@@ -1828,9 +1952,8 @@ document.getElementById('cat-name-input').addEventListener('keydown', e => {
 
 document.getElementById('proj-add-btn').addEventListener('click', () => {
   const name = document.getElementById('proj-name-input').value.trim();
-  const color = document.getElementById('proj-color-picker').value;
   if (!name) return;
-  projects.push({ id: uid(), name, color });
+  projects.push({ id: uid(), name, color: projSelectedColor });
   saveProjects();
   document.getElementById('proj-name-input').value = '';
   renderSettings();
