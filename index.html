@@ -1454,10 +1454,7 @@ const HOURS_MIN = 0.5;
 const HOURS_MAX = 24;
 
 function formatHours(h) {
-  if (h < 1) return Math.round(h * 60) + '分';
-  const whole = Math.floor(h);
-  const rem = Math.round((h - whole) * 60);
-  return rem > 0 ? `${whole}h${rem}分` : `${whole}h`;
+  return (Math.round(h * 10) / 10) + 'h';
 }
 
 function updateHoursDisplay() {
