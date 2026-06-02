@@ -2246,14 +2246,12 @@ function gcUpdateButton(connected) {
 async function gcFetchEvents(accessToken) {
   const now = new Date();
   const timeMin = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const timeMax = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 23, 59, 59).toISOString();
 
   const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
   url.searchParams.set('timeMin', timeMin);
-  url.searchParams.set('timeMax', timeMax);
   url.searchParams.set('singleEvents', 'true');
   url.searchParams.set('orderBy', 'startTime');
-  url.searchParams.set('maxResults', '100');
+  url.searchParams.set('maxResults', '2500');
 
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${accessToken}` },
