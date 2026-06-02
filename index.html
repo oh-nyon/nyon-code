@@ -980,6 +980,70 @@ body {
   font-size: 18px !important;
 }
 
+/* ─── Google Auth Button ─── */
+#gcal-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px 5px 8px;
+  border: 1px solid var(--gray-300);
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12.5px;
+  font-family: inherit;
+  color: var(--ink-soft);
+  transition: all .15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+#gcal-btn:hover { border-color: var(--ink-soft); color: var(--ink); }
+#gcal-btn.connected { border-color: #4a7fa5; color: #4a7fa5; background: rgba(74,127,165,.06); }
+
+.gcal-btn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--gray-400);
+  flex-shrink: 0;
+}
+
+#gcal-btn.connected .gcal-btn-dot { background: #4a7fa5; }
+
+/* ─── GCal event block in timeline ─── */
+.gcal-event-block {
+  display: flex;
+  flex-direction: column;
+  background: rgba(74,127,165,.12);
+  border-left: 2.5px solid #4a7fa5;
+  border-radius: 3px;
+  padding: 3px 7px;
+  font-size: 11px;
+  color: #4a7fa5;
+  min-width: 0;
+  word-break: break-all;
+  cursor: default;
+  width: 100%;
+}
+
+.gcal-event-time {
+  font-size: 10px;
+  opacity: .75;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 1px;
+}
+
+.gcal-event-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-content { gap: 4px; }
+
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -1004,6 +1068,7 @@ body {
   .hero-stat-value { font-size: 22px; }
 }
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
@@ -1015,6 +1080,10 @@ body {
     <button class="tab-btn" data-tab="calendar">カレンダー</button>
     <button class="tab-btn" data-tab="settings">設定</button>
   </nav>
+  <button id="gcal-btn" title="Googleカレンダーと連携">
+    <span class="gcal-btn-dot"></span>
+    <span id="gcal-btn-label">Googleカレンダー</span>
+  </button>
 </header>
 
 <!-- Main -->
@@ -1327,6 +1396,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('tab-' + currentTab).classList.add('active');
+    if (currentTab === 'tasks') gcRefreshIfConnected();
     if (currentTab === 'calendar') renderCalendar();
     if (currentTab === 'settings') renderSettings();
   });
@@ -1523,68 +1593,7 @@ function addTask() {
   renderTimeline();
 }
 
-// ─────────────────────────────────────────────
-// TIMELINE
-// ─────────────────────────────────────────────
-function renderTimeline() {
-  const container = document.getElementById('timeline-scroll');
-  container.innerHTML = '';
-  const todayStr = today();
-
-  for (let h = 6; h <= 23; h++) {
-    const slot = document.createElement('div');
-    slot.className = 'timeline-slot';
-    slot.dataset.hour = h;
-    slot.innerHTML = `<div class="timeline-time">${h}:00</div><div class="timeline-content" data-hour="${h}"></div>`;
-
-    slot.addEventListener('dragover', e => {
-      e.preventDefault();
-      slot.classList.add('drag-over');
-      dragOverSlot = h;
-    });
-
-    slot.addEventListener('dragleave', () => {
-      slot.classList.remove('drag-over');
-      if (dragOverSlot === h) dragOverSlot = null;
-    });
-
-    slot.addEventListener('drop', e => {
-      e.preventDefault();
-      slot.classList.remove('drag-over');
-      if (dragTaskId) {
-        const t = tasks.find(t => t.id === dragTaskId);
-        if (t) {
-          t.pinnedHour = h;
-          if (!t.scheduledDate) t.scheduledDate = todayStr;
-          saveTasks();
-          renderTimeline();
-          renderTaskList();
-        }
-        dragTaskId = null;
-      }
-    });
-
-    container.appendChild(slot);
-  }
-
-  // Fill pinned tasks
-  const pinnedTasks = tasks.filter(t => t.pinnedHour !== null && t.scheduledDate === todayStr);
-  pinnedTasks.forEach(t => {
-    const content = container.querySelector(`.timeline-content[data-hour="${t.pinnedHour}"]`);
-    if (!content) return;
-    const chip = document.createElement('div');
-    chip.className = 'timeline-task-chip' + (t.status === 'completed' ? ' completed-chip' : '');
-    chip.textContent = t.title;
-    chip.title = 'ダブルクリックで解除';
-    chip.addEventListener('dblclick', () => {
-      t.pinnedHour = null;
-      saveTasks();
-      renderTimeline();
-      renderTaskList();
-    });
-    content.appendChild(chip);
-  });
-}
+// renderTimeline is defined in the Google Calendar section below
 
 // ─────────────────────────────────────────────
 // TASK LIST
@@ -2188,6 +2197,223 @@ document.getElementById('install-btn').addEventListener('click', async () => {
 document.getElementById('dismiss-install').addEventListener('click', () => {
   document.getElementById('install-banner').classList.remove('show');
 });
+
+// ─────────────────────────────────────────────
+// GOOGLE CALENDAR
+// ─────────────────────────────────────────────
+const GCAL_CLIENT_ID = '837193794732-4uekgl2d7t2fa97h777nvodpcg6tq3q.apps.googleusercontent.com';
+const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
+const GCAL_TOKEN_KEY = 'taskdock_gtoken';
+
+let gcalEvents = []; // { id, summary, startDt, endDt }
+let gcTokenClient = null;
+
+function gcLoadToken() {
+  try {
+    const raw = localStorage.getItem(GCAL_TOKEN_KEY);
+    if (!raw) return null;
+    const t = JSON.parse(raw);
+    if (Date.now() > t.expires_at) { localStorage.removeItem(GCAL_TOKEN_KEY); return null; }
+    return t;
+  } catch { return null; }
+}
+
+function gcSaveToken(token) {
+  const obj = {
+    access_token: token.access_token,
+    expires_at: Date.now() + (token.expires_in - 60) * 1000,
+  };
+  localStorage.setItem(GCAL_TOKEN_KEY, JSON.stringify(obj));
+}
+
+function gcClearToken() {
+  localStorage.removeItem(GCAL_TOKEN_KEY);
+  gcalEvents = [];
+}
+
+function gcUpdateButton(connected) {
+  const btn = document.getElementById('gcal-btn');
+  const label = document.getElementById('gcal-btn-label');
+  if (connected) {
+    btn.classList.add('connected');
+    label.textContent = '連携中 · ログアウト';
+  } else {
+    btn.classList.remove('connected');
+    label.textContent = 'Googleカレンダー';
+  }
+}
+
+async function gcFetchEvents(accessToken) {
+  const now = new Date();
+  const timeMin = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const timeMax = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 23, 59, 59).toISOString();
+
+  const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
+  url.searchParams.set('timeMin', timeMin);
+  url.searchParams.set('timeMax', timeMax);
+  url.searchParams.set('singleEvents', 'true');
+  url.searchParams.set('orderBy', 'startTime');
+  url.searchParams.set('maxResults', '100');
+
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!res.ok) {
+    if (res.status === 401) { gcClearToken(); gcUpdateButton(false); }
+    return;
+  }
+
+  const data = await res.json();
+  gcalEvents = (data.items || [])
+    .filter(ev => ev.start && (ev.start.dateTime || ev.start.date))
+    .map(ev => {
+      const isAllDay = !ev.start.dateTime;
+      const startDt = isAllDay ? new Date(ev.start.date + 'T00:00:00') : new Date(ev.start.dateTime);
+      const endDt   = isAllDay ? new Date(ev.end.date + 'T23:59:59')   : new Date(ev.end.dateTime);
+      return { id: ev.id, summary: ev.summary || '(無題)', startDt, endDt, isAllDay };
+    });
+
+  renderTimeline();
+}
+
+function gcInit() {
+  if (typeof google === 'undefined' || !google.accounts) {
+    // GSI not loaded yet (offline), retry
+    setTimeout(gcInit, 500);
+    return;
+  }
+
+  gcTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GCAL_CLIENT_ID,
+    scope: GCAL_SCOPE,
+    callback: async (response) => {
+      if (response.error) { console.warn('GCal auth error:', response.error); return; }
+      gcSaveToken(response);
+      gcUpdateButton(true);
+      await gcFetchEvents(response.access_token);
+    },
+  });
+
+  // Restore existing token and fetch fresh events
+  const saved = gcLoadToken();
+  if (saved) {
+    gcUpdateButton(true);
+    gcFetchEvents(saved.access_token);
+  }
+}
+
+// タスクタブに切り替わるたびに最新イベントを取得
+function gcRefreshIfConnected() {
+  const saved = gcLoadToken();
+  if (saved) gcFetchEvents(saved.access_token);
+}
+
+document.getElementById('gcal-btn').addEventListener('click', () => {
+  const saved = gcLoadToken();
+  if (saved) {
+    // logout
+    if (typeof google !== 'undefined' && google.accounts) {
+      google.accounts.oauth2.revoke(saved.access_token, () => {});
+    }
+    gcClearToken();
+    gcUpdateButton(false);
+    renderTimeline();
+  } else {
+    if (!gcTokenClient) { alert('Googleサービスの読み込み中です。少し待ってから再試行してください。'); return; }
+    gcTokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+});
+
+// Override renderTimeline to include gcal events
+const _renderTimelineBase = renderTimeline;
+renderTimeline = function() {
+  const container = document.getElementById('timeline-scroll');
+  container.innerHTML = '';
+  const todayStr = today();
+
+  for (let h = 6; h <= 23; h++) {
+    const slot = document.createElement('div');
+    slot.className = 'timeline-slot';
+    slot.dataset.hour = h;
+    slot.innerHTML = `<div class="timeline-time">${h}:00</div><div class="timeline-content" data-hour="${h}"></div>`;
+
+    slot.addEventListener('dragover', e => {
+      e.preventDefault();
+      slot.classList.add('drag-over');
+      dragOverSlot = h;
+    });
+    slot.addEventListener('dragleave', () => {
+      slot.classList.remove('drag-over');
+      if (dragOverSlot === h) dragOverSlot = null;
+    });
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('drag-over');
+      if (dragTaskId) {
+        const t = tasks.find(t => t.id === dragTaskId);
+        if (t) {
+          t.pinnedHour = h;
+          if (!t.scheduledDate) t.scheduledDate = todayStr;
+          saveTasks();
+          renderTimeline();
+          renderTaskList();
+        }
+        dragTaskId = null;
+      }
+    });
+
+    container.appendChild(slot);
+  }
+
+  // GCal events (blue blocks) — show in today's slots
+  const todayDate = new Date(todayStr + 'T00:00:00');
+  const todayEvents = gcalEvents.filter(ev => {
+    const evDate = dateStr(ev.startDt);
+    return evDate === todayStr;
+  });
+
+  todayEvents.forEach(ev => {
+    const startH = ev.isAllDay ? 6 : ev.startDt.getHours();
+    const endH   = ev.isAllDay ? 7 : ev.endDt.getHours() + (ev.endDt.getMinutes() > 0 ? 1 : 0);
+    const slots  = ev.isAllDay ? [6] : Array.from({ length: Math.max(1, endH - startH) }, (_, i) => startH + i);
+
+    const fmt = dt => `${dt.getHours()}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    const timeLabel = ev.isAllDay ? '終日' : `${fmt(ev.startDt)}–${fmt(ev.endDt)}`;
+
+    slots.forEach(sh => {
+      if (sh < 6 || sh > 23) return;
+      const content = container.querySelector(`.timeline-content[data-hour="${sh}"]`);
+      if (!content) return;
+      const block = document.createElement('div');
+      block.className = 'gcal-event-block';
+      block.innerHTML = `<span class="gcal-event-time">${timeLabel}</span><span class="gcal-event-title">${escHtml(ev.summary)}</span>`;
+      block.title = ev.summary;
+      content.appendChild(block);
+    });
+  });
+
+  // Pinned tasks (black chips) — on top of gcal events
+  const pinnedTasks = tasks.filter(t => t.pinnedHour !== null && t.scheduledDate === todayStr);
+  pinnedTasks.forEach(t => {
+    const content = container.querySelector(`.timeline-content[data-hour="${t.pinnedHour}"]`);
+    if (!content) return;
+    const chip = document.createElement('div');
+    chip.className = 'timeline-task-chip' + (t.status === 'completed' ? ' completed-chip' : '');
+    chip.textContent = t.title;
+    chip.title = 'ダブルクリックで解除';
+    chip.addEventListener('dblclick', () => {
+      t.pinnedHour = null;
+      saveTasks();
+      renderTimeline();
+      renderTaskList();
+    });
+    content.appendChild(chip);
+  });
+};
+
+// Initialize after DOM ready
+setTimeout(gcInit, 300);
 
 // ─────────────────────────────────────────────
 // INIT
